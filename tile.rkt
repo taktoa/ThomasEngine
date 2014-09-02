@@ -7,7 +7,7 @@
 ;; with the arrow keys.
 
 ;; Grass texture for testing
-(define grass (bitmap/file "/home/remy/Downloads/grass.png"))
+(define grass (bitmap/file "grass.png"))
 ;; Tile width and height defined by that texture for testing
 (define tile-width (image-width grass))
 (define tile-height (image-height grass))
