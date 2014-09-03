@@ -25,6 +25,9 @@
 
 (define (half x) (/ x 2))
 
+;;
+(define (get-center-screen-tile dims)
+  ((
 ;; Function that gives the all the tiles on screen
 (define (get-tiles dims)
   (range 1))
