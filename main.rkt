@@ -18,11 +18,11 @@
   (new ascii-canvas% 
        [parent test-frame]
        [tiles (tileset (build-path RUNTIME_DIR "tiles.png") 9 16 16 16)]
-       [canvas-width cw]
-       [canvas-height ch]))
+       [canvas-width 40]
+       [canvas-height 20]))
 
-(for* ([xi (in-range cw)]
-       [yi (in-range ch)])
+(for* ([xi (in-range 40)]
+       [yi (in-range 20)])
   (send test-ac write #\nul xi yi))
 
 (send test-frame show #t)

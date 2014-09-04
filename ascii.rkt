@@ -18,7 +18,7 @@
     
     (init-field
      parent
-     [tiles (tileset "cp437_16x16.png" 9 16 16 16)]
+     [tiles (tileset "tiles.png" 9 16 16 16)]
      [canvas-width 80]
      [canvas-height 24])
     
