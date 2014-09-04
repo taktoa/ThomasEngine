@@ -15,8 +15,8 @@
 (define tile-h 16)
 (define tileset-w 16)
 (define tileset-h 16)
-(define canvas-w 40)
-(define canvas-h 20)
+(define canvas-w 32)
+(define canvas-h 32)
 (define tileset-path (build-path RUNTIME_DIR "tiles.png"))
 
 (define test-ac
@@ -34,10 +34,9 @@
 
 (thread
  (lambda ()
-   (sleep 2.5)
    (let loop ()
      (send test-ac write 
-           35
+           (random 256)
            (random canvas-w) (random canvas-h))
      (sleep 0.1)
      (loop))))
