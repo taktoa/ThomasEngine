@@ -11,19 +11,24 @@
        [label "Testing"]
        [style '(no-resize-border)]))
 
-(define cw 40)
-(define ch 20)
+(define tile-w 9)
+(define tile-h 16)
+(define tileset-w 16)
+(define tileset-h 16)
+(define canvas-w 40)
+(define canvas-h 20)
+(define tileset-path (build-path RUNTIME_DIR "tiles.png"))
 
 (define test-ac
   (new ascii-canvas% 
        [parent test-frame]
-       [tiles (tileset (build-path RUNTIME_DIR "tiles.png") 9 16 16 16)]
-       [canvas-width 40]
-       [canvas-height 20]))
+       [tiles (tileset tileset-path tile-w tile-h tileset-w tileset-h)]
+       [canvas-width canvas-w]
+       [canvas-height canvas-h]))
 
-(for* ([xi (in-range 40)]
-       [yi (in-range 20)])
-  (send test-ac write #\nul xi yi))
+(for* ([xi (in-range canvas-w)]
+       [yi (in-range canvas-h)])
+  (send test-ac write 0 xi yi))
 
 (send test-frame show #t)
 
@@ -32,8 +37,8 @@
    (sleep 2.5)
    (let loop ()
      (send test-ac write 
-           #\#
-           (random cw) (random ch))
+           35
+           (random canvas-w) (random canvas-h))
      (sleep 0.1)
      (loop))))
 
