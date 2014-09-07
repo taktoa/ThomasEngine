@@ -34,21 +34,35 @@
   (new texture-canvas% 
        [parent test-frame]
        [texture-path (build-path RUNTIME_DIR "bigtexture.png")]
+       [char-callback (λ (c) (thread-send key-thread c))]
        [width 960]
        [height 540]))
 
 ; Show the canvas
 (send test-frame show #t)
 
-; Move the view area in a circle, continuously, forever
-(thread
- (lambda ()
-   (let loop ([t 0])
-     (define x (round (* (send test-ac max-x) 1/2 (+ 1 (cos (/ t 360))))))
-     (define y (round (* (send test-ac max-y) 1/2 (+ 1 (sin (/ t 360))))))
-     (send test-ac set-position x y)
-     (sleep 1/120)
-     (loop (+ t 2)))))
+; Number of pixels to move per keycode
+(define delta 20)
+
+; Move the canvas in the requisite direction
+(define (move dir canvas)
+  (let ([cx (get-field position-x canvas)]
+        [cy (get-field position-y canvas)]
+        [mv (λ (x y) (send canvas set-position x y))])
+    (match dir
+      ['up    (mv cx (- cy delta))]
+      ['down  (mv cx (+ cy delta))]
+      ['left  (mv (- cx delta) cy)]
+      ['right (mv (+ cx delta) cy)]
+      [_ (void)])))
+
+; Key capture thread
+(define key-thread
+  (thread
+   (lambda ()
+     (let loop ()
+       (move (thread-receive) test-ac)
+       (loop)))))
 
 ; Refresh the screen at 60 frames per second
 (thread

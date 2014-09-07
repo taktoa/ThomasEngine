@@ -31,7 +31,8 @@
       parent
       [texture-path "bigtexture.png"]
       [width 960]
-      [height 540])
+      [height 540]
+      [char-callback #f])
     
     (field
       [texture #f]
@@ -84,6 +85,10 @@
     (set! texture (make-bitmap texture-width texture-height))
     (define texture-dc (new bitmap-dc% [bitmap texture]))
     (send texture-dc draw-bitmap texture-file 0 0)
+   
+    ; Override on-char with the char callback
+    (define/override (on-char key-event)
+      (char-callback (send key-event get-key-code)))
     
     ; Set paint callback, minimum width, and minimum height
     (super-new 
