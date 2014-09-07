@@ -41,27 +41,28 @@
 ; Show the canvas
 (send test-frame show #t)
 
-; Number of pixels to move per keycode
-(define delta 20)
-
 ; Move the canvas in the requisite direction
-(define (move dir canvas)
-  (let ([cx (get-field position-x canvas)]
-        [cy (get-field position-y canvas)]
-        [mv (λ (x y) (send canvas set-position x y))])
+(define (move dir delta canvas)
+  (let ([pd delta] [nd (- 0 delta)])
     (match dir
-      ['up    (mv cx (- cy delta))]
-      ['down  (mv cx (+ cy delta))]
-      ['left  (mv (- cx delta) cy)]
-      ['right (mv (+ cx delta) cy)]
+      ['up    (dmv 0 nd canvas)]
+      ['down  (dmv 0 pd canvas)]
+      ['left  (dmv nd 0 canvas)]
+      ['right (dmv pd 0 canvas)]
       [_ (void)])))
+
+; Move canvas by (dx, dy)
+(define (dmv dx dy canvas)
+  (let ([cx (get-field position-x canvas)]
+        [cy (get-field position-y canvas)])
+    (send canvas set-position (+ dx cx) (+ dy cy))))
 
 ; Key capture thread
 (define key-thread
   (thread
    (lambda ()
      (let loop ()
-       (move (thread-receive) test-ac)
+       (move (thread-receive) 20 test-ac)
        (loop)))))
 
 ; Refresh the screen at 60 frames per second
