@@ -85,7 +85,7 @@
     (define texture-dc (new bitmap-dc% [bitmap texture]))
     (send texture-dc draw-bitmap texture-file 0 0)
     
-    ; Set pain callback, minimum width, and minimum height
+    ; Set paint callback, minimum width, and minimum height
     (super-new 
       [parent parent]
       [paint-callback (λ (c dc) (paint c dc))]
