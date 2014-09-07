@@ -1,8 +1,5 @@
 #lang racket
-(require 
-  "matrix.rkt"
-  racket/draw
-  racket/gui)
+(require racket/gui)
 
 (provide
  (all-defined-out))
@@ -15,19 +12,17 @@
       refresh)
     
     (init-field
-     parent
-     [texture-path "bigtexture.png"]
-     [width 960]
-     [height 540])
+      parent
+      [texture-path "bigtexture.png"]
+      [width 960]
+      [height 540])
     
     (field
-     [texture #f]
-     [offscreen-buffer #f] 
-     [offscreen-buffer-dc #f]
-     [old-position-x 0]
-     [old-position-y 0]
-     [position-x 0]
-     [position-y 0])
+      [texture #f]
+      [offscreen-buffer #f] 
+      [offscreen-buffer-dc #f]
+      [position-x 0]
+      [position-y 0])
     
     ; Repaint the canvas
     (define/private (paint self dc)
@@ -40,22 +35,13 @@
       (set! offscreen-buffer-dc (new bitmap-dc% [bitmap offscreen-buffer])))
     
     (define/private (draw-texture x y)
-      (send offscreen-buffer-dc draw-bitmap-section
-            texture
-            0
-            0
-            x
-            y
-            (get-width)
-            (get-height)))
-    
-    (define/public (clear) (init-buffer))
+      (send offscreen-buffer-dc draw-bitmap-section texture 0 0 x y (get-width) (get-height)))
     
     (define/public (set-position x y)
       (set! position-x x)
       (set! position-y y))
 
-    ; Load the glyphs
+    ; Load the texture
     (define texture-file (read-bitmap texture-path 'unknown))
     (set! texture (make-bitmap (send texture-file get-width) (send texture-file get-height)))
     (define texture-dc (new bitmap-dc% [bitmap texture]))
@@ -67,8 +53,6 @@
       [paint-callback (λ (c dc) (paint c dc))]
       [min-width width]
       [min-height height])
-    
-    ;(send this clear)
     
     (send this focus)))
 
