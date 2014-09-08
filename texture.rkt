@@ -29,17 +29,18 @@
     
     (init-field
      parent
-     [texture-path "bigtexture.png"]
+     [texture #f]
      [width 960]
      [height 540]
      [char-callback #f])
     
     (field
-     [texture #f]
-     [texture-width 0]
-     [texture-height 0]
      [position-x 0]
      [position-y 0])
+    
+    ;(define-values (texture-width texture-height) (send texture get-size))
+    (define texture-width  (send texture get-width))
+    (define texture-height (send texture get-height))
     
     ; Screen-painting callback function
     (define/private (paint self dc)
@@ -57,7 +58,7 @@
     (define/private (bound x a b)
       (cond [(> x b) b]
             [(< x a) a]
-            [true x]))
+            [true    x]))
     
     ; Draw the screen at a position, bracketed by texture size bounds
     (define/private (draw-texture x y dc)
@@ -70,14 +71,6 @@
       (unless (and (= position-x x) (= position-y y))
         (set! position-x x)
         (set! position-y y)))
-    
-    ; Read texture file in, set width and height variables, and import the bitmap to a drawing context
-    (define texture-file (read-bitmap texture-path 'unknown))
-    (set! texture-width (send texture-file get-width))
-    (set! texture-height (send texture-file get-height))
-    (set! texture (make-bitmap texture-width texture-height))
-    (define texture-dc (new bitmap-dc% [bitmap texture]))
-    (send texture-dc draw-bitmap texture-file 0 0)
     
     ; Unwrap the key-codes from the key-event and pass them to key-translate
     (define/private (key-translate-event e)

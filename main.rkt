@@ -30,11 +30,22 @@
        [label "Testing"]
        [style '(no-resize-border)]))
 
+; Read in texture file
+(define texture-path (build-path RUNTIME_DIR "bigtexture.png"))
+(define (get-texture-dc path)
+  (define texture-file (read-bitmap texture-path 'unknown))
+  (define texture-w (send texture-file get-width))
+  (define texture-h (send texture-file get-height))
+  (define texture-bm (make-bitmap texture-w texture-h))
+  (define texture-dc (new bitmap-dc% [bitmap texture-bm]))
+  (send texture-dc draw-bitmap texture-file 0 0)
+  texture-bm)
+
 ; Define a new canvas
 (define test-ac
   (new texture-canvas% 
        [parent test-frame]
-       [texture-path (build-path RUNTIME_DIR "bigtexture.png")]
+       [texture (get-texture-dc texture-path)]
        [char-callback (λ (c) (thread-send key-thread c))]
        [width 960]
        [height 540]))
