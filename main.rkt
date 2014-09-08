@@ -57,6 +57,7 @@
         [cy (get-field position-y canvas)])
     (send canvas set-position (+ dx cx) (+ dy cy))))
 
+; Instantiate velocity variable
 (define v-x 0)
 (define v-y 0)
 
