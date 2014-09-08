@@ -38,7 +38,7 @@
      [position-x 0]
      [position-y 0])
     
-    ;(define-values (texture-width texture-height) (send texture get-size))
+    ; Get texture width and height
     (define texture-width  (send texture get-width))
     (define texture-height (send texture get-height))
     
