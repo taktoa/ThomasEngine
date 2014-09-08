@@ -45,10 +45,10 @@
 (define (move dir delta canvas)
   (let ([pd delta] [nd (- 0 delta)])
     (match dir
-      ['up    (dmv 0 nd canvas)]
-      ['down  (dmv 0 pd canvas)]
-      ['left  (dmv nd 0 canvas)]
-      ['right (dmv pd 0 canvas)]
+      [#\w (dmv 0 nd canvas)]
+      [#\s (dmv 0 pd canvas)]
+      [#\a (dmv nd 0 canvas)]
+      [#\d (dmv pd 0 canvas)]
       [_ (void)])))
 
 ; Move canvas by (dx, dy)
@@ -57,18 +57,36 @@
         [cy (get-field position-y canvas)])
     (send canvas set-position (+ dx cx) (+ dy cy))))
 
+(define v-x 0)
+(define v-y 0)
+
 ; Key capture thread
 (define key-thread
   (thread
    (lambda ()
      (let loop ()
-       (move (thread-receive) 20 test-ac)
+       (match (thread-receive)
+         [#\w (set! v-y -2)]
+         [#\s (set! v-y 2)]
+         [#\a (set! v-x -2)]
+         [#\d (set! v-x 2)]
+         ['release (set! v-x 0) (set! v-y 0)]
+         [_ (void)])
+       (loop)))))
+
+(define move-thread
+  (thread
+   (lambda ()
+     (let loop ()
+       (dmv v-x v-y test-ac)
+       (sleep 0.005)
        (loop)))))
 
 ; Refresh the screen at 60 frames per second
-(thread
- (lambda ()
-   (let loop ()
-     (send test-frame refresh)
-     (sleep 1/60)
-     (loop))))
+(define refresh-thread
+  (thread
+   (lambda ()
+     (let loop ()
+       (send test-frame refresh)
+       (sleep 1/60)
+       (loop)))))
