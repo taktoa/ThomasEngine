@@ -38,21 +38,14 @@
      [texture #f]
      [texture-width 0]
      [texture-height 0]
-     [offscreen-buffer #f] 
-     [offscreen-buffer-dc #f]
      [position-x 0]
      [position-y 0])
     
     ; Screen-painting callback function
     (define/private (paint self dc)
-      (unless offscreen-buffer (init-buffer))
-      (draw-texture position-x position-y)
-      (send dc draw-bitmap offscreen-buffer 0 0))
-    
-    ; Initialize offscreen buffer and drawing context
-    (define/private (init-buffer)
-      (set! offscreen-buffer (make-screen-bitmap (get-width) (get-height)))
-      (set! offscreen-buffer-dc (new bitmap-dc% [bitmap offscreen-buffer])))
+      (send dc suspend-flush)
+      (draw-texture position-x position-y dc)
+      (send dc resume-flush))
     
     ; Utility functions for allowable position bounds
     (define/public (min-x) 0)
@@ -67,10 +60,10 @@
             [true x]))
     
     ; Draw the screen at a position, bracketed by texture size bounds
-    (define/private (draw-texture x y)
+    (define/private (draw-texture x y dc)
       (define adj-x (bound x (min-x) (max-x)))
       (define adj-y (bound y (min-y) (max-y)))
-      (send offscreen-buffer-dc draw-bitmap-section texture 0 0 adj-x adj-y (get-width) (get-height)))
+      (send dc draw-bitmap-section texture 0 0 adj-x adj-y (get-width) (get-height)))
     
     ; Set the screen position if it has changed
     (define/public (set-position x y)
