@@ -18,6 +18,7 @@
 (require 
   "texture.rkt"
   racket/gui
+  racket/set
   racket/runtime-path)
 
 ; Path for finding the texture file
@@ -41,46 +42,46 @@
 ; Show the canvas
 (send test-frame show #t)
 
-; Move the canvas in the requisite direction
-(define (move dir delta canvas)
-  (let ([pd delta] [nd (- 0 delta)])
-    (match dir
-      [#\w (dmv 0 nd canvas)]
-      [#\s (dmv 0 pd canvas)]
-      [#\a (dmv nd 0 canvas)]
-      [#\d (dmv pd 0 canvas)]
-      [_ (void)])))
-
 ; Move canvas by (dx, dy)
 (define (dmv dx dy canvas)
   (let ([cx (get-field position-x canvas)]
         [cy (get-field position-y canvas)])
     (send canvas set-position (+ dx cx) (+ dy cy))))
 
-; Instantiate velocity variable
-(define v-x 0)
-(define v-y 0)
+; The set of all currently-pressed keys
+(define key-set (mutable-set))
+
+; Velocity in pixels per movement thread update
+(define vel 5)
+
+; Add or remove a key from the key-set
+(define (set-key-set l)
+  (match l
+    [(cons x 'press) (set-add! key-set x)]
+    [(cons x 'release) (set-remove! key-set x)]
+    [_ (void)]))
 
 ; Key capture thread
 (define key-thread
   (thread
    (lambda ()
      (let loop ()
-       (match (thread-receive)
-         [#\w (set! v-y -2)]
-         [#\s (set! v-y 2)]
-         [#\a (set! v-x -2)]
-         [#\d (set! v-x 2)]
-         ['release (set! v-x 0) (set! v-y 0)]
-         [_ (void)])
+       (set-key-set (thread-receive))
        (loop)))))
 
+; Movement thread
 (define move-thread
   (thread
    (lambda ()
      (let loop ()
+       (define up?    (if (set-member? key-set #\w) 1 0))
+       (define down?  (if (set-member? key-set #\s) 1 0))
+       (define left?  (if (set-member? key-set #\a) 1 0))
+       (define right? (if (set-member? key-set #\d) 1 0))
+       (define v-x (* vel (- right? left?)))
+       (define v-y (* vel (- down? up?)))
        (dmv v-x v-y test-ac)
-       (sleep 0.005)
+       (sleep 1/120)
        (loop)))))
 
 ; Refresh the screen at 60 frames per second

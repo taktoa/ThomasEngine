@@ -28,20 +28,20 @@
       refresh)
     
     (init-field
-      parent
-      [texture-path "bigtexture.png"]
-      [width 960]
-      [height 540]
-      [char-callback #f])
+     parent
+     [texture-path "bigtexture.png"]
+     [width 960]
+     [height 540]
+     [char-callback #f])
     
     (field
-      [texture #f]
-      [texture-width 0]
-      [texture-height 0]
-      [offscreen-buffer #f] 
-      [offscreen-buffer-dc #f]
-      [position-x 0]
-      [position-y 0])
+     [texture #f]
+     [texture-width 0]
+     [texture-height 0]
+     [offscreen-buffer #f] 
+     [offscreen-buffer-dc #f]
+     [position-x 0]
+     [position-y 0])
     
     ; Screen-painting callback function
     (define/private (paint self dc)
@@ -71,13 +71,13 @@
       (define adj-x (bound x (min-x) (max-x)))
       (define adj-y (bound y (min-y) (max-y)))
       (send offscreen-buffer-dc draw-bitmap-section texture 0 0 adj-x adj-y (get-width) (get-height)))
-
+    
     ; Set the screen position if it has changed
     (define/public (set-position x y)
       (unless (and (= position-x x) (= position-y y))
         (set! position-x x)
         (set! position-y y)))
-
+    
     ; Read texture file in, set width and height variables, and import the bitmap to a drawing context
     (define texture-file (read-bitmap texture-path 'unknown))
     (set! texture-width (send texture-file get-width))
@@ -85,17 +85,28 @@
     (set! texture (make-bitmap texture-width texture-height))
     (define texture-dc (new bitmap-dc% [bitmap texture]))
     (send texture-dc draw-bitmap texture-file 0 0)
-   
-    ; Override on-char with the char callback
+    
+    ; Unwrap the key-codes from the key-event and pass them to key-translate
+    (define/private (key-translate-event e)
+      (key-translate (send e get-key-code) (send e get-key-release-code)))
+    
+    ; Translate raw key-events to more useable pairs
+    (define/private (key-translate x y)
+      (cond
+        [(eq? x 'release) (cons y 'release)]
+        [(eq? y 'press)   (cons x 'press)]
+        [true             (void)]))
+    
+    ; Override on-char with the char callback, fed by key-translate-event
     (define/override (on-char key-event)
-      (char-callback (send key-event get-key-code)))
+      (char-callback (key-translate-event key-event)))
     
     ; Set paint callback, minimum width, and minimum height
     (super-new 
-      [parent parent]
-      [paint-callback (λ (c dc) (paint c dc))]
-      [min-width width]
-      [min-height height])
+     [parent parent]
+     [paint-callback (λ (c dc) (paint c dc))]
+     [min-width width]
+     [min-height height])
     
     ; Focus the canvas
     (send this focus)))
