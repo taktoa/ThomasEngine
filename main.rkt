@@ -59,6 +59,12 @@
 ; Convert Hz to milliseconds
 (define (hz-to-ms f) (inexact->exact (round (/ 1000 f))))
 
+; Timer creation utility function
+(define (create-timer callback rate)
+  (new timer%
+       [notify-callback callback]
+       [interval (hz-to-ms rate)]))
+
 ;; Instantiate relevant objects
 ; Define a new frame
 (define main-frame
@@ -86,9 +92,7 @@
 
 ; Screen refresh timer
 (define screen-refresh-timer
-  (new timer%
-       [notify-callback screen-refresh-callback]
-       [interval (hz-to-ms screen-refresh-rate)]))
+  (create-timer screen-refresh-callback screen-refresh-rate))
 
 ; Movement update callback
 (define (move-callback)
@@ -99,9 +103,7 @@
 
 ; Movement update timer
 (define move-timer
-  (new timer%
-       [notify-callback move-callback]
-       [interval (hz-to-ms move-refresh-rate)]))
+  (create-timer move-callback move-refresh-rate))
 
 ;; Initialization
 ; Show the canvas
