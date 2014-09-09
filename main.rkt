@@ -17,18 +17,13 @@
 #lang racket
 (require 
   "texture.rkt"
+  "event.rkt"
   racket/gui
   racket/set
   racket/runtime-path)
 
 ; Path for finding the texture file
 (define-runtime-path RUNTIME_DIR ".")
-
-; Define a new frame
-(define test-frame
-  (new frame%
-       [label "Testing"]
-       [style '(no-resize-border)]))
 
 ; Read in texture file
 (define texture-path (build-path RUNTIME_DIR "bigtexture.png"))
@@ -41,12 +36,22 @@
   (send texture-dc draw-bitmap texture-file 0 0)
   texture-bm)
 
+; Define a new frame
+(define test-frame
+  (new frame%
+       [label "Testing"]
+       [style '(no-resize-border)]))
+
+; Define a new event handler
+(define event-handler (make-object evt-handler%))
+(define event-handler-thread (send event-handler get-key-thread))
+
 ; Define a new canvas
 (define test-ac
   (new texture-canvas% 
        [parent test-frame]
        [texture (get-texture-dc texture-path)]
-       [char-callback (λ (c) (thread-send key-thread c))]
+       [event-callback (λ (c) (thread-send event-handler-thread c))]
        [width 960]
        [height 540]))
 
@@ -59,47 +64,25 @@
         [cy (get-field position-y canvas)])
     (send canvas set-position (+ dx cx) (+ dy cy))))
 
-; The set of all currently-pressed keys
-(define key-set (mutable-set))
-
 ; Velocity in pixels per movement thread update
 (define vel 5)
 
-; Add or remove a key from the key-set
-(define (set-key-set l)
-  (match l
-    [(cons x 'press) (set-add! key-set x)]
-    [(cons x 'release) (set-remove! key-set x)]
-    [_ (void)]))
-
-; Key capture thread
-(define key-thread
-  (thread
-   (lambda ()
-     (let loop ()
-       (set-key-set (thread-receive))
-       (loop)))))
-
 ; Movement thread
 (define move-thread
-  (thread
-   (lambda ()
-     (let loop ()
-       (define up?    (if (set-member? key-set #\w) 1 0))
-       (define down?  (if (set-member? key-set #\s) 1 0))
-       (define left?  (if (set-member? key-set #\a) 1 0))
-       (define right? (if (set-member? key-set #\d) 1 0))
-       (define v-x (* vel (- right? left?)))
-       (define v-y (* vel (- down? up?)))
-       (dmv v-x v-y test-ac)
-       (sleep 1/120)
-       (loop)))))
+  (thread (lambda ()
+            (let loop ()
+              (define (bool->int b) (if b 1 0))
+              (define (pressed? c) (send event-handler is-pressed? c))
+              (define (pressedn x) (bool->int (pressed? x)))
+              (define v-x (* vel (- (pressedn #\d) (pressedn #\a))))
+              (define v-y (* vel (- (pressedn #\s) (pressedn #\w))))
+              (dmv v-x v-y test-ac)
+              (sleep 1/120)
+              (loop)))))
 
 ; Refresh the screen at 60 frames per second
 (define refresh-thread
-  (thread
-   (lambda ()
-     (let loop ()
-       (send test-frame refresh)
-       (sleep 1/60)
-       (loop)))))
+  (thread (lambda () (let loop ()
+                       (send test-frame refresh)
+                       (sleep 1/60)
+                       (loop)))))

@@ -32,7 +32,7 @@
      [texture #f]
      [width 960]
      [height 540]
-     [char-callback #f])
+     [event-callback #f])
     
     (field
      [position-x 0]
@@ -74,7 +74,7 @@
     
     ; Unwrap the key-codes from the key-event and pass them to key-translate
     (define/private (key-translate-event e)
-      (key-translate (send e get-key-code) (send e get-key-release-code)))
+      (key-translate (send e get-key-code) (send` e get-key-release-code)))
     
     ; Translate raw key-events to more useable pairs
     (define/private (key-translate x y)
@@ -83,9 +83,9 @@
         [(eq? y 'press)   (cons x 'press)]
         [true             (void)]))
     
-    ; Override on-char with the char callback, fed by key-translate-event
-    (define/override (on-char key-event)
-      (char-callback (key-translate-event key-event)))
+    ; Override on-char and on-event with the event callback
+    (define/override (on-char key-event) (event-callback key-event))
+    (define/override (on-event key-event) (event-callback key-event))
     
     ; Set paint callback, minimum width, and minimum height
     (super-new 

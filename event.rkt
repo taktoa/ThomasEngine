@@ -1,0 +1,71 @@
+; keyboard.rkt
+; Copyright 2014 Remy E. Goldschmidt <taktoa@gmail.com>
+; This file is part of ThomasEngine.
+;    ThomasEngine is free software: you can redistribute it and/or modify
+;    it under the terms of the GNU General Public License as published by
+;    the Free Software Foundation, either version 3 of the License, or
+;    (at your option) any later version.
+;
+;    ThomasEngine is distributed in the hope that it will be useful,
+;    but WITHOUT ANY WARRANTY; without even the implied warranty of
+;    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;    GNU General Public License for more details.
+;
+;    You should have received a copy of the GNU General Public License
+;    along with ThomasEngine. If not, see <http://www.gnu.org/licenses/>.
+
+#lang racket
+(require racket/gui
+         racket/set)
+
+(provide
+ (all-defined-out))
+
+(define evt-handler%
+  (class object% 
+    (super-new)
+    (field [pressed-keys (mutable-set)])
+    
+    ; Translate an event to a more usable form
+    (define/private (translate-event e)
+      (cond
+        [(is-a? e mouse-event%) (mouse-translate-event e)]
+        [(is-a? e key-event%) (key-translate-event e)]))
+    
+    (define/private (mouse-translate-event e) #f)
+    
+    (define/private (mouse-translate e) #f)
+    
+    ; Unwrap the key-codes from the key-event and pass them to key-translate
+    (define/private (key-translate-event e)
+      (key-translate (send e get-key-code) (send e get-key-release-code)))
+    
+    ; Translate raw key-events to more useable pairs
+    (define/private (key-translate x y)
+      (cond
+        [(eq? x 'release) (cons y 'release)]
+        [(eq? y 'press)   (cons x 'press)]
+        [true             (void)]))
+    
+    ; Add or remove a key from the key-set
+    (define/private (set-pressed-keys l)
+      (match l
+        [(cons x 'press)   (set-add! pressed-keys x)]
+        [(cons x 'release) (set-remove! pressed-keys x)]
+        [_                 (void)]))
+    
+    ; Getter for key capture thread
+    (define/public (get-key-thread) key-thread)
+    
+    ; Getter for current key state
+    (define/public (get-key-state) pressed-keys)
+    
+    ; Utility function for determining whether or not a key is pressed
+    (define/public (is-pressed? c) (set-member? pressed-keys c))
+    
+    ; Key capture thread
+    (define key-thread
+      (thread (lambda ()
+                (let loop ()
+                  (set-pressed-keys (translate-event (thread-receive)))
+                  (loop)))))))
