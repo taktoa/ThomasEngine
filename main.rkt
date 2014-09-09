@@ -18,15 +18,30 @@
 (require 
   "texture.rkt"
   "event.rkt"
-  racket/gui
-  racket/set
-  racket/runtime-path)
+  racket/gui)
 
-; Path for finding the texture file
-(define-runtime-path RUNTIME_DIR ".")
+;; Program parameters
+; Canvas width and height
+(define canvas-width  960)
+(define canvas-height 540)
 
-; Read in texture file
-(define texture-path (build-path RUNTIME_DIR "bigtexture.png"))
+; Velocity in pixels per movement thread update
+(define vel 5)
+
+; Texture file name
+(define texture-path "bigtexture.png")
+
+; Frame label
+(define main-frame-label "Testing")
+
+; Screen refresh rate in Hz
+(define screen-refresh-rate 60)
+
+; Movement refresh rate in Hz
+(define move-refresh-rate 120)
+
+;; Utility functions
+; Read in texture file at path
 (define (get-texture-dc path)
   (define texture-file (read-bitmap texture-path 'unknown))
   (define texture-w (send texture-file get-width))
@@ -36,10 +51,17 @@
   (send texture-dc draw-bitmap texture-file 0 0)
   texture-bm)
 
+; Move canvas by (dx, dy)
+(define (dmv dx dy canvas)
+  (let ([cx (get-field position-x canvas)]
+        [cy (get-field position-y canvas)])
+    (send canvas set-position (+ dx cx) (+ dy cy))))
+
+;; Instantiate relevant objects
 ; Define a new frame
-(define test-frame
+(define main-frame
   (new frame%
-       [label "Testing"]
+       [label main-frame-label]
        [style '(no-resize-border)]))
 
 ; Define a new event handler
@@ -47,42 +69,36 @@
 (define event-handler-thread (send event-handler get-key-thread))
 
 ; Define a new canvas
-(define test-ac
+(define main-ac
   (new texture-canvas% 
-       [parent test-frame]
+       [parent main-frame]
        [texture (get-texture-dc texture-path)]
        [event-callback (λ (c) (thread-send event-handler-thread c))]
-       [width 960]
-       [height 540]))
+       [width canvas-width]
+       [height canvas-height]))
 
+;; Timers, callbacks, and threads
+; Create a screen refresh timer
+(define screen-refresh-timer
+  (new timer%
+       [notify-callback (λ () (send main-frame refresh))]
+       [interval (round (/ 1000 screen-refresh-rate))]))
+
+; Movement update callback
+(define (move-callback)
+  (define (bool->int b) (if b 1 0))
+  (define (pressed? c) (send event-handler is-pressed? c))
+  (define (pressedn x) (bool->int (pressed? x)))
+  (define v-x (* vel (- (pressedn #\d) (pressedn #\a))))
+  (define v-y (* vel (- (pressedn #\s) (pressedn #\w))))
+  (dmv v-x v-y main-ac))
+
+; Movement update timer
+(define move-timer
+  (new timer%
+       [notify-callback move-callback]
+       [interval (round (/ 1000 move-refresh-rate))]))
+
+;; Initialization
 ; Show the canvas
-(send test-frame show #t)
-
-; Move canvas by (dx, dy)
-(define (dmv dx dy canvas)
-  (let ([cx (get-field position-x canvas)]
-        [cy (get-field position-y canvas)])
-    (send canvas set-position (+ dx cx) (+ dy cy))))
-
-; Velocity in pixels per movement thread update
-(define vel 5)
-
-; Movement thread
-(define move-thread
-  (thread (lambda ()
-            (let loop ()
-              (define (bool->int b) (if b 1 0))
-              (define (pressed? c) (send event-handler is-pressed? c))
-              (define (pressedn x) (bool->int (pressed? x)))
-              (define v-x (* vel (- (pressedn #\d) (pressedn #\a))))
-              (define v-y (* vel (- (pressedn #\s) (pressedn #\w))))
-              (dmv v-x v-y test-ac)
-              (sleep 1/120)
-              (loop)))))
-
-; Refresh the screen at 60 frames per second
-(define refresh-thread
-  (thread (lambda () (let loop ()
-                       (send test-frame refresh)
-                       (sleep 1/60)
-                       (loop)))))
+(send main-frame show #t)
