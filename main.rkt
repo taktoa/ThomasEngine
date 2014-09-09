@@ -15,10 +15,9 @@
 ;    along with ThomasEngine. If not, see <http://www.gnu.org/licenses/>.
 
 #lang racket
-(require 
-  "texture.rkt"
-  "event.rkt"
-  racket/gui)
+(require "texture.rkt"
+         "event.rkt"
+         racket/gui)
 
 ;; Program parameters
 ; Canvas width and height
@@ -57,6 +56,9 @@
         [cy (get-field position-y canvas)])
     (send canvas set-position (+ dx cx) (+ dy cy))))
 
+; Convert Hz to milliseconds
+(define (hz-to-ms f) (inexact->exact (round (/ 1000 f))))
+
 ;; Instantiate relevant objects
 ; Define a new frame
 (define main-frame
@@ -78,17 +80,19 @@
        [height canvas-height]))
 
 ;; Timers, callbacks, and threads
-; Create a screen refresh timer
+; Screen refresh callback
+(define (screen-refresh-callback)
+  (send main-frame refresh))
+
+; Screen refresh timer
 (define screen-refresh-timer
   (new timer%
-       [notify-callback (λ () (send main-frame refresh))]
-       [interval (round (/ 1000 screen-refresh-rate))]))
+       [notify-callback screen-refresh-callback]
+       [interval (hz-to-ms screen-refresh-rate)]))
 
 ; Movement update callback
 (define (move-callback)
-  (define (bool->int b) (if b 1 0))
-  (define (pressed? c) (send event-handler is-pressed? c))
-  (define (pressedn x) (bool->int (pressed? x)))
+  (define (pressedn c) (if (send event-handler is-pressed? c) 1 0))
   (define v-x (* vel (- (pressedn #\d) (pressedn #\a))))
   (define v-y (* vel (- (pressedn #\s) (pressedn #\w))))
   (dmv v-x v-y main-ac))
@@ -97,7 +101,7 @@
 (define move-timer
   (new timer%
        [notify-callback move-callback]
-       [interval (round (/ 1000 move-refresh-rate))]))
+       [interval (hz-to-ms move-refresh-rate)]))
 
 ;; Initialization
 ; Show the canvas

@@ -23,9 +23,10 @@
 
 (define evt-handler%
   (class object% 
-    (super-new)
+    ;; Class fields
     (field [pressed-keys (mutable-set)])
     
+    ;; Private functions
     ; Translate an event to a more usable form
     (define/private (translate-event e)
       (cond
@@ -57,18 +58,20 @@
         [(list x 'release) (set-remove! pressed-keys x)]
         [_                 (void)]))
     
-    ; Getter for key capture thread
+    ;; Public getters and setters
+    ; Getter for key capture thread and key state
     (define/public (get-key-thread) key-thread)
-    
-    ; Getter for current key state
     (define/public (get-key-state) pressed-keys)
     
     ; Utility function for determining whether or not a key is pressed
     (define/public (is-pressed? c) (set-member? pressed-keys c))
     
+    ;; Class initialization
     ; Key capture thread
     (define key-thread
       (thread (lambda ()
                 (let loop ()
                   (set-pressed-keys (translate-event (thread-receive)))
-                  (loop)))))))
+                  (loop)))))
+    
+    (super-new)))

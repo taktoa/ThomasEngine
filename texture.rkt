@@ -51,11 +51,9 @@
             [(< x a) a]
             [true    x]))
     
-    ; Draw the screen at a position, bracketed by texture size bounds
+    ; Draw the screen at a position
     (define/private (draw-texture x y dc)
-      (define adj-x (bound x (min-x) (max-x)))
-      (define adj-y (bound y (min-y) (max-y)))
-      (send dc draw-bitmap-section texture 0 0 adj-x adj-y (get-width) (get-height)))
+      (send dc draw-bitmap-section texture 0 0 position-x position-y (get-width) (get-height)))
    
     ; Screen-painting callback function
     (define/private (paint self dc)
@@ -70,18 +68,20 @@
     (define/public (max-x) (- texture-width width))
     (define/public (max-y) (- texture-height height))
     
-    ; Set the screen position if it has changed
+    ; Set the screen position if it has changed, bracked by position bounds
     (define/public (set-position x y)
-      (unless (and (= position-x x) (= position-y y))
-        (set! position-x x)
-        (set! position-y y)))
+      (define adj-x (bound x (min-x) (max-x)))
+      (define adj-y (bound y (min-y) (max-y)))
+      (unless (and (= position-x adj-x) (= position-y adj-y))
+        (set! position-x adj-x)
+        (set! position-y adj-y)))
     
     ;; Superclass overrides
     ; Override on-char and on-event with the event callback
     (define/override (on-char key-event) (event-callback key-event))
     (define/override (on-event key-event) (event-callback key-event))
     
-    ;; Superclass initialization
+    ;; Class initialization
     ; Set paint callback, minimum width, and minimum height
     (super-new 
      [parent parent]
