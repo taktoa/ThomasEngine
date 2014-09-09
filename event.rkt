@@ -1,4 +1,4 @@
-; keyboard.rkt
+; event.rkt
 ; Copyright 2014 Remy E. Goldschmidt <taktoa@gmail.com>
 ; This file is part of ThomasEngine.
 ;    ThomasEngine is free software: you can redistribute it and/or modify
@@ -32,9 +32,12 @@
         [(is-a? e mouse-event%) (mouse-translate-event e)]
         [(is-a? e key-event%) (key-translate-event e)]))
     
-    (define/private (mouse-translate-event e) #f)
+    ; Unwrap mouse event type, x, and y, and pass them to mouse-translate
+    (define/private (mouse-translate-event e)
+      (mouse-translate (send e get-event-type) (send e get-x) (send e get-y)))
     
-    (define/private (mouse-translate e) #f)
+    ; Translate mouse event type, x, and y to a list
+    (define/private (mouse-translate t x y) (list t x y))
     
     ; Unwrap the key-codes from the key-event and pass them to key-translate
     (define/private (key-translate-event e)
@@ -43,15 +46,15 @@
     ; Translate raw key-events to more useable pairs
     (define/private (key-translate x y)
       (cond
-        [(eq? x 'release) (cons y 'release)]
-        [(eq? y 'press)   (cons x 'press)]
+        [(eq? x 'release) (list y 'release)]
+        [(eq? y 'press)   (list x 'press)]
         [true             (void)]))
     
     ; Add or remove a key from the key-set
     (define/private (set-pressed-keys l)
       (match l
-        [(cons x 'press)   (set-add! pressed-keys x)]
-        [(cons x 'release) (set-remove! pressed-keys x)]
+        [(list x 'press)   (set-add! pressed-keys x)]
+        [(list x 'release) (set-remove! pressed-keys x)]
         [_                 (void)]))
     
     ; Getter for key capture thread

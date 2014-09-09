@@ -22,6 +22,7 @@
 
 (define texture-canvas%
   (class canvas%
+    ;; Class fields
     (inherit
       get-width
       get-height
@@ -29,31 +30,21 @@
     
     (init-field
      parent
-     [texture #f]
-     [width 960]
-     [height 540]
-     [event-callback #f])
+     texture
+     width
+     height
+     [event-callback (λ () #f)])
     
     (field
      [position-x 0]
      [position-y 0])
     
+    ;; Local utility variables
     ; Get texture width and height
     (define texture-width  (send texture get-width))
     (define texture-height (send texture get-height))
     
-    ; Screen-painting callback function
-    (define/private (paint self dc)
-      (send dc suspend-flush)
-      (draw-texture position-x position-y dc)
-      (send dc resume-flush))
-    
-    ; Utility functions for allowable position bounds
-    (define/public (min-x) 0)
-    (define/public (min-y) 0)
-    (define/public (max-x) (- texture-width width))
-    (define/public (max-y) (- texture-height height))
-    
+    ;; Private functions
     ; Function that brackets x within [a, b]
     (define/private (bound x a b)
       (cond [(> x b) b]
@@ -65,6 +56,19 @@
       (define adj-x (bound x (min-x) (max-x)))
       (define adj-y (bound y (min-y) (max-y)))
       (send dc draw-bitmap-section texture 0 0 adj-x adj-y (get-width) (get-height)))
+   
+    ; Screen-painting callback function
+    (define/private (paint self dc)
+      (send dc suspend-flush)
+      (draw-texture position-x position-y dc)
+      (send dc resume-flush))
+    
+    ;; Public getters and setters
+    ; Utility functions for allowable position bounds
+    (define/public (min-x) 0)
+    (define/public (min-y) 0)
+    (define/public (max-x) (- texture-width width))
+    (define/public (max-y) (- texture-height height))
     
     ; Set the screen position if it has changed
     (define/public (set-position x y)
@@ -72,21 +76,12 @@
         (set! position-x x)
         (set! position-y y)))
     
-    ; Unwrap the key-codes from the key-event and pass them to key-translate
-    (define/private (key-translate-event e)
-      (key-translate (send e get-key-code) (send` e get-key-release-code)))
-    
-    ; Translate raw key-events to more useable pairs
-    (define/private (key-translate x y)
-      (cond
-        [(eq? x 'release) (cons y 'release)]
-        [(eq? y 'press)   (cons x 'press)]
-        [true             (void)]))
-    
+    ;; Superclass overrides
     ; Override on-char and on-event with the event callback
     (define/override (on-char key-event) (event-callback key-event))
     (define/override (on-event key-event) (event-callback key-event))
     
+    ;; Superclass initialization
     ; Set paint callback, minimum width, and minimum height
     (super-new 
      [parent parent]
