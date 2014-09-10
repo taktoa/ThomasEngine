@@ -33,7 +33,7 @@
      texture
      width
      height
-     [event-callback (λ () #f)])
+     [event-callback (λ (c) #f)])
     
     (field
      [position-x 0]
@@ -51,16 +51,10 @@
             [(< x a) a]
             [true    x]))
     
-    ; Draw the screen at a position
+    ; Draw the texture at a position
     (define/private (draw-texture x y dc)
       (send dc draw-bitmap-section texture 0 0 position-x position-y (get-width) (get-height)))
    
-    ; Screen-painting callback function
-    (define/private (paint self dc)
-      (send dc suspend-flush)
-      (draw-texture position-x position-y dc)
-      (send dc resume-flush))
-    
     ;; Public getters and setters
     ; Utility functions for allowable position bounds
     (define/public (min-x) 0)
@@ -81,11 +75,17 @@
     (define/override (on-char key-event) (event-callback key-event))
     (define/override (on-event key-event) (event-callback key-event))
     
+    ; Override screen-painting function
+    (define/override (on-paint)
+      (let ([dc (send this get-dc)])
+        (send dc suspend-flush)
+        (draw-texture position-x position-y dc)
+        (send dc resume-flush)))
+    
     ;; Class initialization
     ; Set paint callback, minimum width, and minimum height
     (super-new 
      [parent parent]
-     [paint-callback (λ (c dc) (paint c dc))]
      [min-width width]
      [min-height height])
     
