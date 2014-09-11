@@ -94,6 +94,11 @@
 (define screen-refresh-timer
   (create-timer screen-refresh-callback screen-refresh-rate))
 
+; check color of a pixel at position x y
+(define (black? x y canvas) 
+  (define black (make-object color% "black"))
+  (send canvas get-pixel x y black))
+
 ; Movement update callback
 (define (move-callback)
   (define (pressedn c) (if (send event-handler is-pressed? c) 1 0))
