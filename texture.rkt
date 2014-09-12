@@ -15,7 +15,9 @@
 ;    along with ThomasEngine. If not, see <http://www.gnu.org/licenses/>.
 
 #lang racket
-(require racket/gui)
+(require
+  "utility.rkt"
+  racket/gui)
 
 (provide
  (all-defined-out))
@@ -45,12 +47,6 @@
     (define texture-height (send texture get-height))
     
     ;; Private functions
-    ; Function that brackets x within [a, b]
-    (define/private (bound x a b)
-      (cond [(> x b) b]
-            [(< x a) a]
-            [true    x]))
-    
     ; Draw the texture at a position
     (define/private (draw-texture x y dc)
       (send dc draw-bitmap-section texture 0 0 position-x position-y (get-width) (get-height)))

@@ -17,6 +17,7 @@
 #lang racket
 (require "texture.rkt"
          "event.rkt"
+         "utility.rkt"
          racket/gui)
 
 ;; Program parameters
@@ -42,7 +43,7 @@
 ;; Utility functions
 ; Read in texture file at path
 (define (get-texture-dc path)
-  (define texture-file (read-bitmap texture-path 'unknown))
+  (define texture-file (read-bitmap path 'unknown))
   (define texture-w (send texture-file get-width))
   (define texture-h (send texture-file get-height))
   (define texture-bm (make-bitmap texture-w texture-h))
@@ -56,14 +57,6 @@
         [cy (get-field position-y canvas)])
     (send canvas set-position (+ dx cx) (+ dy cy))))
 
-; Convert Hz to milliseconds
-(define (hz-to-ms f) (inexact->exact (round (/ 1000 f))))
-
-; Timer creation utility function
-(define (create-timer callback rate)
-  (new timer%
-       [notify-callback callback]
-       [interval (hz-to-ms rate)]))
 
 ;; Instantiate relevant objects
 ; Define a new frame
