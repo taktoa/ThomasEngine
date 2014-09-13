@@ -65,12 +65,3 @@
       (render-callback (prop-get-all)))
 
     (super-new)))
-
-;(define (get-texture-dc)
-;  (define texture-file (read-bitmap "big-texture.png" 'unknown))
-;  (define texture-w (send texture-file get-width))
-;  (define texture-h (send texture-file get-height))
-;  (define texture-bm (make-bitmap texture-w texture-h))
-;  (define texture-dc (new bitmap-dc% [bitmap texture-bm]))
-;  (send texture-dc draw-bitmap texture-file 0 0)
-;  texture-bm)
