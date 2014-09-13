@@ -19,10 +19,12 @@
          "event.rkt"
          racket/gui)
 
+(print-graph #t)
+
 ;; Program parameters
 ; Canvas width and height
-(define canvas-width  960)
-(define canvas-height 540)
+(define canvas-width  500)
+(define canvas-height 500)
 
 ; Center pixel location
 (define (center-pixel-x canvas) (+ (get-field position-x canvas) (/ canvas-width 2)))
@@ -32,7 +34,7 @@
 (define vel 5)
 
 ; Texture file name
-(define texture-path "collisionmap.png")
+(define texture-path "test.png")
 
 ; Frame label
 (define main-frame-label "Testing")
@@ -62,8 +64,7 @@
 (define (dmv dx dy canvas)
   (let ([cx (get-field position-x canvas)]
         [cy (get-field position-y canvas)])
-    (if (black? (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy) canvas) 
-        (send canvas set-position cx cy) 
+    (unless (black? (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy) canvas)
         (send canvas set-position (+ dx cx) (+ dy cy)))))
 
 ; Convert Hz to milliseconds
@@ -95,6 +96,11 @@
        [width canvas-width]
        [height canvas-height]))
 
+;Start the frame at bottom right
+;(define a (send main-ac max-x))
+;(define b (send main-ac max-y))
+;(send main-ac set-position a b)
+
 ;; Timers, callbacks, and threads
 ; Screen refresh callback
 (define (screen-refresh-callback)
@@ -104,8 +110,12 @@
 (define screen-refresh-timer
   (create-timer screen-refresh-callback screen-refresh-rate))
 
+(define (test-black canvas) 
+  (write (black? (center-pixel-x canvas) (center-pixel-y canvas) canvas)))
+
 ; Movement update callback
 (define (move-callback)
+  (when (send event-handler is-pressed? #\t) (test-black main-ac))
   (define (pressedn c) (if (send event-handler is-pressed? c) 1 0))
   (define v-x (* vel (- (pressedn #\d) (pressedn #\a))))
   (define v-y (* vel (- (pressedn #\s) (pressedn #\w))))

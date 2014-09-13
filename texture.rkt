@@ -80,7 +80,10 @@
     (define/public (black? x y)
       (define bitmap-dc (send texture make-dc))
       (define black (make-object color% "black"))
-      (send bitmap-dc get-pixel x y black))
+      (define color-gotten (make-object color% "black"))
+      (send bitmap-dc get-pixel x y color-gotten)
+      (define (color-numbers color) (cons (send color red) (cons (send color green) (cons (send color blue) '()))))
+      (equal? (color-numbers color-gotten) (color-numbers black)))
     
     ;; Superclass overrides
     ; Override on-char and on-event with the event callback
