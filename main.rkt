@@ -24,11 +24,15 @@
 (define canvas-width  960)
 (define canvas-height 540)
 
+; Center pixel location
+(define (center-pixel-x canvas) (+ (get-field position-x canvas) (/ canvas-width 2)))
+(define (center-pixel-y canvas) (+ (get-field position-y canvas) (/ canvas-height 2)))
+
 ; Velocity in pixels per movement thread update
 (define vel 5)
 
 ; Texture file name
-(define texture-path "bigtexture.png")
+(define texture-path "collisionmap.png")
 
 ; Frame label
 (define main-frame-label "Testing")
@@ -50,11 +54,17 @@
   (send texture-dc draw-bitmap texture-file 0 0)
   texture-bm)
 
+; Check if color of a pixel at position x y is black
+(define (black? x y canvas)
+  (send canvas black? x y))
+
 ; Move canvas by (dx, dy)
 (define (dmv dx dy canvas)
   (let ([cx (get-field position-x canvas)]
         [cy (get-field position-y canvas)])
-    (send canvas set-position (+ dx cx) (+ dy cy))))
+    (if (black? (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy) canvas) 
+        (send canvas set-position cx cy) 
+        (send canvas set-position (+ dx cx) (+ dy cy)))))
 
 ; Convert Hz to milliseconds
 (define (hz-to-ms f) (inexact->exact (round (/ 1000 f))))
@@ -93,11 +103,6 @@
 ; Screen refresh timer
 (define screen-refresh-timer
   (create-timer screen-refresh-callback screen-refresh-rate))
-
-; check color of a pixel at position x y
-(define (black? x y canvas) 
-  (define black (make-object color% "black"))
-  (send canvas get-pixel x y black))
 
 ; Movement update callback
 (define (move-callback)

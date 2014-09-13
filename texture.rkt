@@ -67,7 +67,7 @@
     (define/public (min-y) 0)
     (define/public (max-x) (- texture-width width))
     (define/public (max-y) (- texture-height height))
-    
+         
     ; Set the screen position if it has changed, bracked by position bounds
     (define/public (set-position x y)
       (define adj-x (bound x (min-x) (max-x)))
@@ -75,6 +75,12 @@
       (unless (and (= position-x adj-x) (= position-y adj-y))
         (set! position-x adj-x)
         (set! position-y adj-y)))
+    
+    ; Check if color of a pixel at position x y is black
+    (define/public (black? x y)
+      (define bitmap-dc (send texture make-dc))
+      (define black (make-object color% "black"))
+      (send bitmap-dc get-pixel x y black))
     
     ;; Superclass overrides
     ; Override on-char and on-event with the event callback
