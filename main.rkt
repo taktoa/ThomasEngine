@@ -19,9 +19,10 @@
          "event.rkt"
          racket/gui)
 
-(print-graph #t)
-
 ;; Program parameters
+;Debug switch
+(define DEBUG false)
+
 ; Canvas width and height
 (define canvas-width  500)
 (define canvas-height 500)
@@ -115,7 +116,7 @@
 
 ; Movement update callback
 (define (move-callback)
-  (when (send event-handler is-pressed? #\t) (test-black main-ac))
+  (when (and DEBUG (send event-handler is-pressed? #\t)) (test-black main-ac))
   (define (pressedn c) (if (send event-handler is-pressed? c) 1 0))
   (define v-x (* vel (- (pressedn #\d) (pressedn #\a))))
   (define v-y (* vel (- (pressedn #\s) (pressedn #\w))))

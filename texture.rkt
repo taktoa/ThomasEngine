@@ -80,9 +80,9 @@
     (define/public (black? x y)
       (define bitmap-dc (send texture make-dc))
       (define black (make-object color% "black"))
-      (define color-gotten (make-object color% "black"))
+      (define color-gotten (make-object color% "white"))
       (send bitmap-dc get-pixel x y color-gotten)
-      (define (color-numbers color) (cons (send color red) (cons (send color green) (cons (send color blue) '()))))
+      (define (color-numbers color) (list (send color red) (send color green) (send color blue)))
       (equal? (color-numbers color-gotten) (color-numbers black)))
     
     ;; Superclass overrides
