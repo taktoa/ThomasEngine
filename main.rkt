@@ -18,12 +18,10 @@
 (require "texture.rkt"
          "event.rkt"
          "utility.rkt"
+         "collisions.rkt"
          racket/gui)
 
 ;; Program parameters
-;Debug switch
-(define DEBUG false)
-
 ; Canvas width and height
 (define canvas-width  500)
 (define canvas-height 500)
@@ -36,7 +34,10 @@
 (define vel 5)
 
 ; Texture file name
-(define texture-path "test.png")
+(define texture-path "test-texture.png")
+
+; Collision mask file name
+(define collison-mask-path "test.png")
 
 ; Frame label
 (define main-frame-label "Testing")
@@ -49,14 +50,8 @@
 
 ;; Utility functions
 ; Read in texture file at path
-(define (get-texture-dc path)
-  (define texture-file (read-bitmap path 'unknown))
-  (define texture-w (send texture-file get-width))
-  (define texture-h (send texture-file get-height))
-  (define texture-bm (make-bitmap texture-w texture-h))
-  (define texture-dc (new bitmap-dc% [bitmap texture-bm]))
-  (send texture-dc draw-bitmap texture-file 0 0)
-  texture-bm)
+(define (get-texture path)
+  (read-bitmap path 'unknown))
 
 ; Check if color of a pixel at position x y is black
 (define (black? x y canvas)
@@ -66,7 +61,7 @@
 (define (dmv dx dy canvas)
   (let ([cx (get-field position-x canvas)]
         [cy (get-field position-y canvas)])
-    (unless (black? (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy) canvas)
+    (unless (send  collision-mask colliding? (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy))
         (send canvas set-position (+ dx cx) (+ dy cy)))))
 
 
@@ -85,15 +80,15 @@
 (define main-ac
   (new texture-canvas% 
        [parent main-frame]
-       [texture (get-texture-dc texture-path)]
+       [texture (get-texture texture-path)]
        [event-callback (λ (c) (thread-send event-handler-thread c))]
        [width canvas-width]
        [height canvas-height]))
 
-;Start the frame at bottom right
-;(define a (send main-ac max-x))
-;(define b (send main-ac max-y))
-;(send main-ac set-position a b)
+; Define a collsion detection mask
+(define collision-mask
+  (new collision-mask%
+       [bitmap (get-texture collison-mask-path)]))
 
 ;; Timers, callbacks, and threads
 ; Screen refresh callback
@@ -104,12 +99,8 @@
 (define screen-refresh-timer
   (create-timer screen-refresh-callback screen-refresh-rate))
 
-(define (test-black canvas) 
-  (write (black? (center-pixel-x canvas) (center-pixel-y canvas) canvas)))
-
 ; Movement update callback
 (define (move-callback)
-  (when (and DEBUG (send event-handler is-pressed? #\t)) (test-black main-ac))
   (define (pressedn c) (if (send event-handler is-pressed? c) 1 0))
   (define v-x (* vel (- (pressedn #\d) (pressedn #\a))))
   (define v-y (* vel (- (pressedn #\s) (pressedn #\w))))

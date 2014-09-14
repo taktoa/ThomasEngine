@@ -65,16 +65,7 @@
       (unless (and (= position-x adj-x) (= position-y adj-y))
         (set! position-x adj-x)
         (set! position-y adj-y)))
-    
-    ; Check if color of a pixel at position x y is black
-    (define/public (black? x y)
-      (define bitmap-dc (send texture make-dc))
-      (define black (make-object color% "black"))
-      (define color-gotten (make-object color% "white"))
-      (send bitmap-dc get-pixel x y color-gotten)
-      (define (color-numbers color) (list (send color red) (send color green) (send color blue)))
-      (equal? (color-numbers color-gotten) (color-numbers black)))
-    
+
     ;; Superclass overrides
     ; Override on-char and on-event with the event callback
     (define/override (on-char key-event) (event-callback key-event))
@@ -86,7 +77,7 @@
         (send dc suspend-flush)
         (draw-texture position-x position-y dc)
         (send dc resume-flush)))
-    
+
     ;; Class initialization
     ; Set paint callback, minimum width, and minimum height
     (super-new 
