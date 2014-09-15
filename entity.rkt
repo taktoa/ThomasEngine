@@ -16,52 +16,89 @@
 
 #lang racket
 
+(require data/queue)
+
 (provide
  (all-defined-out))
 
 (define entity%
   (class object%
     ;; Class fields
-    (init-field
-     [update-callback (λ () (hash))])
-
     (field
-     [properties (hash)])
-
+     [update-queue (make-queue)]
+     [properties (make-hash)])
+    
     ;; Public getters and setters
-    (define/public (update)
-      (prop-merge (update-callback)))
-
+    ; Commit changes in the update queue
+    (define/public (update!)
+      (for ([u (queue->list update-queue)])
+        (prop-merge! u))
+      (set! update-queue (make-queue)))
+    
+    ; Queue up a property change
+    (define/public (queue-prop-change! c)
+      (enqueue! update-queue c))
+    
+    ; Get a specific property of the entity
+    (define/public (prop-get k) (hash-ref properties k))    
+    
+    ; Get all properties of this entity
     (define/public (prop-get-all) properties)
-
-    (define/public (prop-get k) (hash-ref properties k))
-
-    (define/private (prop-merge changes)
+    
+    ;; Private utility functions
+    ; Merge changes into the properties
+    (define/private (prop-merge! changes)
       (hash-for-each
        changes
        (λ (k v)
          (if (eq? v 'delete)
-             (prop-rem k)
-             (prop-set k v)))))
-
-    (define/private (prop-set k v) (hash-set! properties k v))
-    (define/private (prop-rem k) (hash-remove! properties k))
-
+             (hash-remove! properties k)
+             (hash-set! properties k v)))))
+    
     (super-new)))
 
-(define display-entity%
+(define sprite-entity%
   (class entity%
     ;; Class fields
     (inherit
-      update
+      update!
+      queue-prop-change!
       prop-get
       prop-get-all)
-
+    
     (init-field
-     [render-callback (λ (p) #f)])
-
+     [sprite #f])
+    
+    (field
+     [sprite-dc #f])
+    
     ;; Public getters and setters
     (define/public (render)
-      (render-callback (prop-get-all)))
-
+      (update!)
+      (values
+       (render-sprite)
+       (prop-get 'position-x)
+       (prop-get 'position-y)))
+    
+    (define/public (set-position! x y)
+      (queue-prop-change!
+       (hash 'position-x x 'position-y y)))
+    
+    (define/public (set-rotation! r)
+      (queue-prop-change!
+       (hash 'rotation r)))
+    
+    (define/public (set-scale! s)
+      (queue-prop-change!
+       (hash 'scale s)))
+    
+    (define/private (render-sprite)
+      (let ([s (prop-get 'scale)]
+            [r (prop-get 'rotation)])
+        (send sprite-dc clear)
+        (send sprite-dc draw-bitmap sprite 0 0)
+        (send sprite-dc scale s s)
+        (send sprite-dc set-rotation r)))
+    
+    
     (super-new)))
