@@ -63,7 +63,9 @@
 (define main-frame
   (new frame%
        [label main-frame-label]
-       [style '(no-resize-border)]))
+       [style '(no-resize-border)]
+       [stretchable-width #f]
+       [stretchable-height #f]))
 
 ; Define a new event handler
 (define event-handler (make-object evt-handler%))
