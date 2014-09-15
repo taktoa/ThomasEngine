@@ -57,7 +57,7 @@
     (define/public (min-y) 0)
     (define/public (max-x) (- texture-width width))
     (define/public (max-y) (- texture-height height))
-    
+         
     ; Set the screen position if it has changed, bracked by position bounds
     (define/public (set-position x y)
       (define adj-x (bound x (min-x) (max-x)))
@@ -65,7 +65,7 @@
       (unless (and (= position-x adj-x) (= position-y adj-y))
         (set! position-x adj-x)
         (set! position-y adj-y)))
-    
+
     ;; Superclass overrides
     ; Override on-char and on-event with the event callback
     (define/override (on-char key-event) (event-callback key-event))
@@ -77,7 +77,7 @@
         (send dc suspend-flush)
         (draw-texture position-x position-y dc)
         (send dc resume-flush)))
-    
+
     ;; Class initialization
     ; Set paint callback, minimum width, and minimum height
     (super-new 
