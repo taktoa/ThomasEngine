@@ -42,11 +42,18 @@
 ; Frame label
 (define main-frame-label "Testing")
 
-; Screen refresh rate in Hz
+; Define refresh rates in Hz
+(define misc-key-refresh-rate 10)
 (define screen-refresh-rate 60)
-
-; Movement refresh rate in Hz
 (define move-refresh-rate 120)
+
+; Up, down, left, and right keys
+(define up-key    #\w)
+(define down-key  #\s)
+(define left-key  #\a)
+(define right-key #\d)
+(define misc-key-hash
+  (hash #\q exit))
 
 ;; Utility functions
 ; Read in texture file at path
@@ -62,8 +69,7 @@
   (let ([cx (get-field position-x canvas)]
         [cy (get-field position-y canvas)])
     (unless (send  collision-mask colliding? (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy))
-        (send canvas set-position (+ dx cx) (+ dy cy)))))
-
+      (send canvas set-position (+ dx cx) (+ dy cy)))))
 
 ;; Instantiate relevant objects
 ; Define a new frame
@@ -87,7 +93,7 @@
        [width canvas-width]
        [height canvas-height]))
 
-; Define a collsion detection mask
+; Define a collision detection mask
 (define collision-mask
   (new collision-mask%
        [bitmap (get-texture collison-mask-path)]))
@@ -101,11 +107,29 @@
 (define screen-refresh-timer
   (create-timer screen-refresh-callback screen-refresh-rate))
 
+; Miscellaneous key callback
+(define (misc-key-callback)
+  (define (when-pressed? c a) (when (send event-handler is-pressed? c) (a)))
+  (hash-for-each misc-key-hash (λ (k v) (when-pressed? k v))))
+
+; Miscellaneous key timer
+(define misc-key-timer
+  (create-timer misc-key-callback misc-key-refresh-rate))
+
+; Check if the requisite keys are being pressed
+(define (move-key-checker)
+  (define (pressed? c) (send event-handler is-pressed? c))
+  (values (pressed? up-key)
+          (pressed? down-key)
+          (pressed? left-key)
+          (pressed? right-key)))
+
 ; Movement update callback
 (define (move-callback)
-  (define (pressedn c) (if (send event-handler is-pressed? c) 1 0))
-  (define v-x (* vel (- (pressedn #\d) (pressedn #\a))))
-  (define v-y (* vel (- (pressedn #\s) (pressedn #\w))))
+  (define-values (u d l r) (move-key-checker))
+  (define (keys->vel a b) (* vel (- (if a 1 0) (if b 1 0))))
+  (define v-x (keys->vel r l))
+  (define v-y (keys->vel d u))
   (dmv v-x v-y main-ac))
 
 ; Movement update timer
