@@ -18,7 +18,7 @@
 (require "texture.rkt"
          "event.rkt"
          "utility.rkt"
-         "collisions.rkt"
+         "propertylayer.rkt"
          racket/gui)
 
 ;; Program parameters
@@ -36,8 +36,8 @@
 ; Texture file name
 (define texture-path "test-texture.png")
 
-; Collision mask file name
-(define collison-mask-path "test.png")
+; Property layer file name
+(define property-layer-path "test.png")
 
 ; Frame label
 (define main-frame-label "Testing")
@@ -48,20 +48,19 @@
 ; Movement refresh rate in Hz
 (define move-refresh-rate 120)
 
+; Hash table for property layer functions
+(define property-hash (hash "black" 'collision "white" 'nothing))
+
 ;; Utility functions
 ; Read in texture file at path
 (define (get-texture path)
   (read-bitmap path 'unknown))
 
-; Check if color of a pixel at position x y is black
-(define (black? x y canvas)
-  (send canvas black? x y))
-
 ; Move canvas by (dx, dy)
 (define (dmv dx dy canvas)
   (let ([cx (get-field position-x canvas)]
         [cy (get-field position-y canvas)])
-    (unless (send  collision-mask colliding? (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy))
+    (unless (equal? (send  property-layer property-at-pos (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy)) 'collision)
         (send canvas set-position (+ dx cx) (+ dy cy)))))
 
 
@@ -86,9 +85,10 @@
        [height canvas-height]))
 
 ; Define a collsion detection mask
-(define collision-mask
-  (new collision-mask%
-       [bitmap (get-texture collison-mask-path)]))
+(define property-layer
+  (new property-layer%
+       [bitmap (get-texture property-layer-path)]
+       [hash-table property-hash]))
 
 ;; Timers, callbacks, and threads
 ; Screen refresh callback
