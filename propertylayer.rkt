@@ -25,6 +25,8 @@
 (define property-layer%
   (class object%
     
+    (super-new)
+    
     ; Class field
     (init-field
      bitmap
@@ -44,8 +46,8 @@
       (send bitmap-dc get-pixel x y color-gotten)
       (hash-ref color-value-hash (color-numbers color-gotten) 'unknown))
     
-    ; Utility-type function(?) used to turn a color object into a list of form
-    ; '(R G B)
+    ; Utility-type(?) function used to turn a color object into a list of form
+    ; '(R G B)http://docs.racket-lang.org/reference/pairs.html#%28def._%28%28lib._racket%2Fprivate%2Fbase..rkt%29._member%29%29
     (define/private (color-numbers color) (list (send color red) (send color green) (send color blue)))
     
     ; General function that maps f over the keys in a hash, while retaining the same values
@@ -59,6 +61,19 @@
       (color-numbers color))
 
     ; Takes the hash-table given at initialization and turns it into a more usable form
-    (define color-value-hash (hash-key-map (λ (color-name) (color-value color-name)) hash-table))
-    
-    (super-new)))
+    ; (lambda needed because of how methods work; a method cannot be called as a value)
+    (define color-value-hash (hash-key-map (λ (color-name) (color-value color-name)) hash-table))))
+
+(define color-list (send the-color-database get-names))
+
+(define (in-cdb? color-name) (member color-name color-list))
+
+(define (are-in-cdb? color-lst) (andmap in-cdb? color-lst))
+
+(define test-list-good '("white" "blue" "red" "green"))
+(define test-list-bad '('white "blue" "elephant"))
+
+(define (keys-in-cdb? hash) (are-in-cdb? (hash-keys hash)))
+
+(define test-hashg (hash "blue" 'junk "red" 'junk "green" 'junk))
+(define test-hashb (hash "elephant" 'junk 'red 'junk "blue" 'junk))
