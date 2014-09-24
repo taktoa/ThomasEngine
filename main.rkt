@@ -42,14 +42,23 @@
 ; Frame label
 (define main-frame-label "Testing")
 
-; Screen refresh rate in Hz
+; Define refresh rates in Hz
+(define misc-key-refresh-rate 10)
 (define screen-refresh-rate 60)
-
-; Movement refresh rate in Hz
 (define move-refresh-rate 120)
 
+<<<<<<< HEAD
 ; Hash table for property layer functions
 (define property-hash (hash "black" 'collision "white" 'nothing))
+=======
+; Up, down, left, and right keys
+(define up-key    #\w)
+(define down-key  #\s)
+(define left-key  #\a)
+(define right-key #\d)
+(define misc-key-hash
+  (hash #\q exit))
+>>>>>>> 2f41fbfc5b539cf6a7ba6031c10a26100395c0c6
 
 ;; Utility functions
 ; Read in texture file at path
@@ -60,16 +69,23 @@
 (define (dmv dx dy canvas)
   (let ([cx (get-field position-x canvas)]
         [cy (get-field position-y canvas)])
+<<<<<<< HEAD
     (unless (equal? (send  property-layer property-at-pos (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy)) 'collision)
         (send canvas set-position (+ dx cx) (+ dy cy)))))
 
+=======
+    (unless (send  collision-mask colliding? (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy))
+      (send canvas set-position (+ dx cx) (+ dy cy)))))
+>>>>>>> 2f41fbfc5b539cf6a7ba6031c10a26100395c0c6
 
 ;; Instantiate relevant objects
 ; Define a new frame
 (define main-frame
   (new frame%
        [label main-frame-label]
-       [style '(no-resize-border)]))
+       [style '(no-resize-border)]
+       [stretchable-width #f]
+       [stretchable-height #f]))
 
 ; Define a new event handler
 (define event-handler (make-object evt-handler%))
@@ -84,11 +100,18 @@
        [width canvas-width]
        [height canvas-height]))
 
+<<<<<<< HEAD
 ; Define a collsion detection mask
 (define property-layer
   (new property-layer%
        [bitmap (get-texture property-layer-path)]
        [hash-table property-hash]))
+=======
+; Define a collision detection mask
+(define collision-mask
+  (new collision-mask%
+       [bitmap (get-texture collison-mask-path)]))
+>>>>>>> 2f41fbfc5b539cf6a7ba6031c10a26100395c0c6
 
 ;; Timers, callbacks, and threads
 ; Screen refresh callback
@@ -99,11 +122,29 @@
 (define screen-refresh-timer
   (create-timer screen-refresh-callback screen-refresh-rate))
 
+; Miscellaneous key callback
+(define (misc-key-callback)
+  (define (when-pressed? c a) (when (send event-handler is-pressed? c) (a)))
+  (hash-for-each misc-key-hash (λ (k v) (when-pressed? k v))))
+
+; Miscellaneous key timer
+(define misc-key-timer
+  (create-timer misc-key-callback misc-key-refresh-rate))
+
+; Check if the requisite keys are being pressed
+(define (move-key-checker)
+  (define (pressed? c) (send event-handler is-pressed? c))
+  (values (pressed? up-key)
+          (pressed? down-key)
+          (pressed? left-key)
+          (pressed? right-key)))
+
 ; Movement update callback
 (define (move-callback)
-  (define (pressedn c) (if (send event-handler is-pressed? c) 1 0))
-  (define v-x (* vel (- (pressedn #\d) (pressedn #\a))))
-  (define v-y (* vel (- (pressedn #\s) (pressedn #\w))))
+  (define-values (u d l r) (move-key-checker))
+  (define (keys->vel a b) (* vel (- (if a 1 0) (if b 1 0))))
+  (define v-x (keys->vel r l))
+  (define v-y (keys->vel d u))
   (dmv v-x v-y main-ac))
 
 ; Movement update timer
