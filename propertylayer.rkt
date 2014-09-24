@@ -62,16 +62,3 @@
     (define color-value-hash (hash-key-map (λ (color-name) (color-value color-name)) hash-table))
     
     (super-new)))
-
-;(define (color-numbers color) (list (send color red) (send color green) (send color blue)))
-;
-;(define (color-values color-list) (map color-value color-list))
-;
-;(define (hash-key-map f h)
-;  (for/hash ([(k v) (in-hash h)]) (values (f k) v)))
-;
-;(define test-hash (hash "black" 'collision "white" 'nothing "green" 'poison))
-;
-;(define (color-value color-name)
-;  (define color (make-object color% color-name))
-;  (color-numbers color))
