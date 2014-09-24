@@ -47,10 +47,9 @@
 (define screen-refresh-rate 60)
 (define move-refresh-rate 120)
 
-<<<<<<< HEAD
 ; Hash table for property layer functions
 (define property-hash (hash "black" 'collision "white" 'nothing))
-=======
+
 ; Up, down, left, and right keys
 (define up-key    #\w)
 (define down-key  #\s)
@@ -58,7 +57,6 @@
 (define right-key #\d)
 (define misc-key-hash
   (hash #\q exit))
->>>>>>> 2f41fbfc5b539cf6a7ba6031c10a26100395c0c6
 
 ;; Utility functions
 ; Read in texture file at path
@@ -69,14 +67,8 @@
 (define (dmv dx dy canvas)
   (let ([cx (get-field position-x canvas)]
         [cy (get-field position-y canvas)])
-<<<<<<< HEAD
     (unless (equal? (send  property-layer property-at-pos (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy)) 'collision)
         (send canvas set-position (+ dx cx) (+ dy cy)))))
-
-=======
-    (unless (send  collision-mask colliding? (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy))
-      (send canvas set-position (+ dx cx) (+ dy cy)))))
->>>>>>> 2f41fbfc5b539cf6a7ba6031c10a26100395c0c6
 
 ;; Instantiate relevant objects
 ; Define a new frame
@@ -100,18 +92,11 @@
        [width canvas-width]
        [height canvas-height]))
 
-<<<<<<< HEAD
-; Define a collsion detection mask
+; Define a property layer
 (define property-layer
   (new property-layer%
        [bitmap (get-texture property-layer-path)]
        [hash-table property-hash]))
-=======
-; Define a collision detection mask
-(define collision-mask
-  (new collision-mask%
-       [bitmap (get-texture collison-mask-path)]))
->>>>>>> 2f41fbfc5b539cf6a7ba6031c10a26100395c0c6
 
 ;; Timers, callbacks, and threads
 ; Screen refresh callback
