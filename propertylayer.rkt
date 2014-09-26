@@ -19,10 +19,23 @@
   "utility.rkt"
   racket/gui)
 
-(provide
- (all-defined-out))
+(provide (contract-out 
+          [property-layer% (class/c (init-field [hash-table property-hash/c]
+                                                [bitmap (is-a?/c bitmap%)])
+                                    (field [bitmap (is-a?/c bitmap%)]
+                                           [hash-table property-hash/c])
+                                    [property-at-pos (integer? integer? . ->m . symbol?)])]))
 
+(define color-list (send the-color-database get-names))
+(define (in-cdb? color-name) (member color-name color-list))
+(define (are-in-cdb? color-lst) (andmap in-cdb? color-lst))
+(define (keys-in-cdb? hash-table) (are-in-cdb? (hash-keys hash-table)))
+(define (keys-are-strings? hash-table) (andmap string? (hash-keys hash-table)))
+(define (values-are-symbols? hash-table) (andmap symbol? (hash-values hash-table)))
+(define property-hash/c 
+  (flat-named-contract 'property-hash (and/c hash? keys-are-strings? values-are-symbols? keys-in-cdb?)))
 (define property-layer%
+  
   (class object%
     
     (super-new)
@@ -41,13 +54,13 @@
       (new bitmap-dc% [bitmap bitmap]))
 
     ; Returns the hash table's value for a color key at (x, y)
-    (define/private (hash-color x y) 
+    (define/private (hash-color x y)
       (define color-gotten (make-object color% "white"))
       (send bitmap-dc get-pixel x y color-gotten)
       (hash-ref color-value-hash (color-numbers color-gotten) 'unknown))
     
     ; Utility-type(?) function used to turn a color object into a list of form
-    ; '(R G B)http://docs.racket-lang.org/reference/pairs.html#%28def._%28%28lib._racket%2Fprivate%2Fbase..rkt%29._member%29%29
+    ; '(R G B)
     (define/private (color-numbers color) (list (send color red) (send color green) (send color blue)))
     
     ; General function that maps f over the keys in a hash, while retaining the same values
@@ -63,17 +76,3 @@
     ; Takes the hash-table given at initialization and turns it into a more usable form
     ; (lambda needed because of how methods work; a method cannot be called as a value)
     (define color-value-hash (hash-key-map (λ (color-name) (color-value color-name)) hash-table))))
-
-(define color-list (send the-color-database get-names))
-
-(define (in-cdb? color-name) (member color-name color-list))
-
-(define (are-in-cdb? color-lst) (andmap in-cdb? color-lst))
-
-(define test-list-good '("white" "blue" "red" "green"))
-(define test-list-bad '('white "blue" "elephant"))
-
-(define (keys-in-cdb? hash) (are-in-cdb? (hash-keys hash)))
-
-(define test-hashg (hash "blue" 'junk "red" 'junk "green" 'junk))
-(define test-hashb (hash "elephant" 'junk 'red 'junk "blue" 'junk))

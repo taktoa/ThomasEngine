@@ -67,7 +67,10 @@
 (define (dmv dx dy canvas)
   (let ([cx (get-field position-x canvas)]
         [cy (get-field position-y canvas)])
-    (unless (equal? (send  property-layer property-at-pos (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy)) 'collision)
+    (unless 
+        (equal? 
+         (send  property-layer property-at-pos (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy)) 
+         'collision)
         (send canvas set-position (+ dx cx) (+ dy cy)))))
 
 ;; Instantiate relevant objects
