@@ -49,7 +49,9 @@
 (define move-refresh-rate 120)
 
 ; Hash table for property layer functions
-(define property-hash (hash "black" 'collision "white" 'nothing))
+(define property-hash
+  (hash "black" 'collision
+        "white" 'nothing))
 
 ; Up, down, left, and right keys
 (define up-key    #\w)
