@@ -41,7 +41,7 @@
      [position-x 0]
      [position-y 0])
     
-    ;; Local utility variables
+    ;; Local variables
     ; Get texture width and height
     (define texture-width  (send texture get-width))
     (define texture-height (send texture get-height))
@@ -51,7 +51,7 @@
     (define/private (draw-texture x y dc)
       (send dc draw-bitmap-section texture 0 0 position-x position-y (get-width) (get-height)))
    
-    ;; Public getters and setters
+    ;; Public functions
     ; Utility functions for allowable position bounds
     (define/public (min-x) 0)
     (define/public (min-y) 0)

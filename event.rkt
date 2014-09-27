@@ -58,7 +58,7 @@
         [(list x 'release) (set-remove! pressed-keys x)]
         [_                 (void)]))
     
-    ;; Public getters and setters
+    ;; Public functions
     ; Getter for key capture thread and key state
     (define/public (get-key-thread) key-thread)
     (define/public (get-key-state) pressed-keys)

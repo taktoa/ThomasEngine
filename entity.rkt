@@ -28,7 +28,17 @@
      [update-queue (make-queue)]
      [properties (make-hash)])
     
-    ;; Public getters and setters
+    ;; Private functions
+    ; Merge changes into the properties
+    (define/private (prop-merge! changes)
+      (hash-for-each
+       changes
+       (λ (k v)
+         (if (eq? v 'delete)
+             (hash-remove! properties k)
+             (hash-set! properties k v)))))
+    
+    ;; Public functions
     ; Commit changes in the update queue
     (define/public (update!)
       (for ([u (queue->list update-queue)])
@@ -45,16 +55,7 @@
     ; Get all properties of this entity
     (define/public (prop-get-all) properties)
     
-    ;; Private utility functions
-    ; Merge changes into the properties
-    (define/private (prop-merge! changes)
-      (hash-for-each
-       changes
-       (λ (k v)
-         (if (eq? v 'delete)
-             (hash-remove! properties k)
-             (hash-set! properties k v)))))
-    
+    ;; Class initialization
     (super-new)))
 
 (define sprite-entity%
@@ -72,7 +73,16 @@
     (field
      [sprite-dc #f])
     
-    ;; Public getters and setters
+    ;; Private functions
+    (define/private (render-sprite)
+      (let ([s (prop-get 'scale)]
+            [r (prop-get 'rotation)])
+        (send sprite-dc clear)
+        (send sprite-dc draw-bitmap sprite 0 0)
+        (send sprite-dc scale s s)
+        (send sprite-dc set-rotation r)))
+    
+    ;; Public functions
     (define/public (render)
       (update!)
       (values
@@ -92,13 +102,5 @@
       (queue-prop-change!
        (hash 'scale s)))
     
-    (define/private (render-sprite)
-      (let ([s (prop-get 'scale)]
-            [r (prop-get 'rotation)])
-        (send sprite-dc clear)
-        (send sprite-dc draw-bitmap sprite 0 0)
-        (send sprite-dc scale s s)
-        (send sprite-dc set-rotation r)))
-    
-    
+    ;; Class initialization
     (super-new)))

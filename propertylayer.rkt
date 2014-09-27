@@ -24,41 +24,44 @@
 
 (define property-layer%
   (class object%
-    
-    ; Class field
+    ;; Class fields
     (init-field
      bitmap
      hash-table)
     
-    ;; Public  function
-    (define/public (property-at-pos x y)
-      (hash-color x y))
-    
+    ;; Local variables
     ; Read in collision diskmap at path
     (define bitmap-dc
       (new bitmap-dc% [bitmap bitmap]))
-
+    
+    ;; Private functions
     ; Returns the hash table's value for a color key at (x, y)
     (define/private (hash-color x y) 
       (define color-gotten (make-object color% "white"))
       (send bitmap-dc get-pixel x y color-gotten)
       (hash-ref color-value-hash (color-numbers color-gotten) 'unknown))
     
-    ; Utility-type function(?) used to turn a color object into a list of form
-    ; '(R G B)
-    (define/private (color-numbers color) (list (send color red) (send color green) (send color blue)))
+    ; Utility function used to turn a color object into a list of form '(R G B)
+    (define/private (color-numbers color)
+      (list (send color red) (send color green) (send color blue)))
     
     ; General function that maps f over the keys in a hash, while retaining the same values
     (define/private (hash-key-map f h)
       (for/hash ([(k v) (in-hash h)]) (values (f k) v)))
     
-    ; Takes a color name (a member of (send the-color-database get-names)) and 
-    ; gives its RGB components as a list of form '(R G B)
+    ; Takes a color name (from the-color-database) and gives its RGB components
     (define/private (color-value color-name)
       (define color (make-object color% color-name))
       (color-numbers color))
-
-    ; Takes the hash-table given at initialization and turns it into a more usable form
-    (define color-value-hash (hash-key-map (λ (color-name) (color-value color-name)) hash-table))
     
+    ; Takes the hash-table given at initialization and turns it into a more usable form
+    (define color-value-hash
+      (hash-key-map (λ (color-name) (color-value color-name)) hash-table))
+    
+    ;; Public  functions
+    ; Get property at a given position
+    (define/public (property-at-pos x y)
+      (hash-color x y))
+    
+    ;; Class initialization
     (super-new)))
