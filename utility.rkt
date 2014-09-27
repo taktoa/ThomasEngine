@@ -18,14 +18,16 @@
 (require
   racket/gui)
 
-(provide
- (all-defined-out))
+(provide (contract-out
+          [bound (real? real? real? . -> . real?)]
+          [hz-to-ms (real? . -> . (and/c integer? exact?))]
+          [create-timer ((-> any) real? . -> . (is-a?/c timer%))]))
 
 ; Bracket x within [a, b]
 (define (bound x a b)
   (cond [(> x b) b]
         [(< x a) a]
-        [true    x]))
+        [else    x]))
 
 ; Convert Hz to milliseconds
 (define (hz-to-ms f) (inexact->exact (round (/ 1000 f))))

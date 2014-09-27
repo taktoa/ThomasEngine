@@ -20,8 +20,35 @@
   racket/gui)
 
 (provide
- (all-defined-out))
+ (contract-out 
+  [property-layer% property-layer%/c]))
 
+;; Contracts
+(define color-list (send the-color-database get-names))
+
+(define (in-cdb? color-name) (member color-name color-list))
+
+(define (are-in-cdb? color-lst) (andmap in-cdb? color-lst))
+
+(define (keys-in-cdb? hash-table) (are-in-cdb? (hash-keys hash-table)))
+
+(define (keys-are-strings? hash-table) (andmap string? (hash-keys hash-table)))
+
+(define (values-are-symbols? hash-table) (andmap symbol? (hash-values hash-table)))
+
+(define property-hash/c 
+  (flat-named-contract
+   'property-hash
+   (and/c hash? keys-are-strings? values-are-symbols? keys-in-cdb?)))
+
+(define property-layer%/c
+  (class/c
+   (init-field
+    [hash-table property-hash/c]
+    [bitmap (is-a?/c bitmap%)])
+   [property-at-pos (integer? integer? . ->m . symbol?)]))
+
+;; Classes
 (define property-layer%
   (class object%
     ;; Class fields
@@ -36,7 +63,7 @@
     
     ;; Private functions
     ; Returns the hash table's value for a color key at (x, y)
-    (define/private (hash-color x y) 
+    (define/private (hash-color x y)
       (define color-gotten (make-object color% "white"))
       (send bitmap-dc get-pixel x y color-gotten)
       (hash-ref color-value-hash (color-numbers color-gotten) 'unknown))
@@ -58,7 +85,7 @@
     (define color-value-hash
       (hash-key-map (λ (color-name) (color-value color-name)) hash-table))
     
-    ;; Public  functions
+    ;; Public functions
     ; Get property at a given position
     (define/public (property-at-pos x y)
       (hash-color x y))

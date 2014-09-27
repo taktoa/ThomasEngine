@@ -15,11 +15,12 @@
 ;    along with ThomasEngine. If not, see <http://www.gnu.org/licenses/>.
 
 #lang racket
-(require "texture.rkt"
-         "event.rkt"
-         "utility.rkt"
-         "propertylayer.rkt"
-         racket/gui)
+(require
+  "texture.rkt"
+  "event.rkt"
+  "utility.rkt"
+  "propertylayer.rkt"
+  racket/gui)
 
 ;; Program parameters
 ; Canvas width and height
@@ -67,8 +68,11 @@
 (define (dmv dx dy canvas)
   (let ([cx (get-field position-x canvas)]
         [cy (get-field position-y canvas)])
-    (unless (equal? (send  property-layer property-at-pos (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy)) 'collision)
-        (send canvas set-position (+ dx cx) (+ dy cy)))))
+    (unless 
+        (equal? 
+         (send  property-layer property-at-pos (+ (center-pixel-x canvas) dx) (+ (center-pixel-y canvas) dy)) 
+         'collision)
+      (send canvas set-position (+ dx cx) (+ dy cy)))))
 
 ;; Instantiate relevant objects
 ; Define a new frame
