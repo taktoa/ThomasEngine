@@ -16,7 +16,8 @@
 
 #lang racket
 
-(require data/queue)
+(require
+  data/queue)
 
 (provide
  (all-defined-out))

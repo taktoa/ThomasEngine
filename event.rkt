@@ -15,8 +15,9 @@
 ;    along with ThomasEngine. If not, see <http://www.gnu.org/licenses/>.
 
 #lang racket
-(require racket/gui
-         racket/set)
+(require
+  racket/gui
+  racket/set)
 
 (provide
  (all-defined-out))
