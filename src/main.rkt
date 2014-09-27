@@ -35,10 +35,10 @@
 (define vel 5)
 
 ; Texture file name
-(define texture-path "test-texture.png")
+(define texture-path "../res/texture.png")
 
 ; Property layer file name
-(define property-layer-path "test.png")
+(define property-layer-path "../res/properties.png")
 
 ; Frame label
 (define main-frame-label "Testing")
