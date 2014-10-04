@@ -1,27 +1,6 @@
 #lang racket
 (require racket/draw
          2htdp/universe)
-(define sprite (read-bitmap "../res/grass.png" 'unknown))
-(define sprite-w (send sprite get-width))
-(define sprite-h (send sprite get-height))
-
-(define (dtr r) (* r (/ (* 2 pi) 360)))
-
-(define scale 2)
-(define (rotsprite) (make-object bitmap% (* scale 2 sprite-w) (* scale 2 sprite-h) #f #t))
-(define rotsprite-dc (send (rotsprite) make-dc))
-
-(define (rotsprite-rotate n)
-  (send rotsprite-dc set-origin (* scale sprite-w) (* scale sprite-h))
-  (send rotsprite-dc set-rotation (dtr (* 20 n)))
-  (send rotsprite-dc set-scale scale scale)
-  (send rotsprite-dc draw-bitmap sprite (* sprite-w -1/2) (* sprite-h -1/2))
-  (define result (send rotsprite-dc get-bitmap))
-  (send rotsprite-dc set-bitmap (rotsprite))
-  result)
-
-(animate rotsprite-rotate)
-
 
 (define sprite%
   (class object%
@@ -30,6 +9,7 @@
      [sprite #f])
     
     (field
+     [outline-dc #f]
      [scale 1]
      [rotation 0]
      [sprite-w 0]
@@ -38,8 +18,14 @@
     ;; Private functions
     (define/private (gen-outline-bitmap)
       (make-object bitmap%
-        (* 2 scale (send sprite get-width))
-        (* 2 scale (send sprite get-height))))
+        (* 2 scale sprite-w)
+        (* 2 scale sprite-h)))
+    
+    (define/private (set-sprite-dims)
+      (set! sprite-w (send sprite get-width))
+      (set! sprite-h (send sprite get-height)))
+    
+    (define/private (dtr r) (* r (/ (* 2 pi) 360)))
     
     ;; Public functions
     ; Set the scale
@@ -50,17 +36,43 @@
     
     ; Render the sprite
     (define/public (render)
-      (define outline-dc (new bitmap-dc% [bitmap (gen-outline-bitmap)]))
+      (set-sprite-dims)
+      (set! outline-dc (new bitmap-dc% [bitmap (gen-outline-bitmap)]))
       (send outline-dc set-origin
             (* scale sprite-w)
             (* scale sprite-h))
       (send outline-dc set-rotation (dtr rotation))
       (send outline-dc set-scale scale scale)
-      (send outline-dc draw-bitmap sprite (* -1/2 sprite-w) (* -1/2 sprite-h))
+      (send outline-dc draw-bitmap ((λ () sprite)) (* -1/2 sprite-w) (* -1/2 sprite-h))
       (send outline-dc get-bitmap))
     
     ;; Class initialization
-    (set! sprite-w (send sprite get-width))
-    (set! sprite-h (send sprite get-height))
-    
     (super-new)))
+
+(define test-sprite
+  (new sprite%
+       [sprite (read-bitmap "../res/grass.png" 'unknown)]))
+
+;(send test-sprite set-scale! 4)
+;
+;(define (animate-example r)
+;  (send test-sprite set-rotation! r)
+;  (send test-sprite render))
+;
+;(animate animate-example)
+
+(send test-sprite set-rotation! 35)
+
+(define big-texture (read-bitmap "../res/texture.png" 'unknown))
+
+(define test-w 500)
+(define test-h 500)
+
+(define test-dc
+  (new bitmap-dc% [bitmap (make-object bitmap% test-w test-h)]))
+
+(send test-dc draw-bitmap big-texture 0 0)
+
+(send test-dc draw-bitmap (send test-sprite render) 200 200 'xor)
+
+(send test-dc get-bitmap)
