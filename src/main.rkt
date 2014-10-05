@@ -76,7 +76,7 @@
                (+ (center-pixel-x canvas) dx)
                (+ (center-pixel-y canvas) dy))
          'collision)
-      (send canvas set-position (+ dx cx) (+ dy cy)))))
+      (send canvas set-position! (+ dx cx) (+ dy cy)))))
 
 ;; Instantiate relevant objects
 ; Define a new frame

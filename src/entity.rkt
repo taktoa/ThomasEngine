@@ -54,7 +54,7 @@
     (define/public (prop-get k) (hash-ref properties k))    
     
     ; Get all properties of this entity
-    (define/public (prop-get-all) properties)
+    (define/public (prop-get-all) (hash-copy properties))
     
     ;; Class initialization
     (super-new)))

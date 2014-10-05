@@ -17,8 +17,7 @@
 #lang racket
 (require
   racket/draw
-  "entity.rkt"
-  2htdp/universe)
+  "entity.rkt")
 
 (define sprite-entity%
   (class entity%
@@ -54,59 +53,125 @@
     
     ;; Public functions
     (define/public (render)
-      (update!)
-      (values
-       (render-sprite)
-       (prop-get 'position-x)
-       (prop-get 'position-y)))
+      (list (render-sprite)
+            (prop-get 'position-x)
+            (prop-get 'position-y)))
+    
+    (define/public (set-properties! props)
+      (queue-prop-change! props))
+    
+    (define/public (set-property! prop-name prop-val)
+      (set-properties! (hash prop-name prop-val)))
     
     (define/public (set-position! x y)
-      (queue-prop-change!
+      (set-properties!
        (hash 'position-x x 'position-y y)))
     
     (define/public (set-rotation! r)
-      (queue-prop-change!
-       (hash 'rotation r)))
+      (set-property! 'rotation r))
     
     (define/public (set-scale! s)
-      (queue-prop-change!
-       (hash 'scale s)))
+      (set-property! 'scale s))
     
     ;; Class initialization
     (super-new)))
 
-(define (mutate-sprite-entity! se r s x y)
-  (send se set-rotation! r)
-  (send se set-scale! s)
-  (send se set-position! x y))
+(define sprite-entity-set%
+  (class object%
+    ;; Class fields
+    (field
+     [entity-hash (make-hash)])
+    
+    ;; Private functions
+    (define/private (update-all-entities)
+      (hash-for-each entity-hash (λ (k v) (send v update!))))
+    
+    (define/private (get-entities-within-area w h x y)
+      (define (posn-within-area px py)
+        (and (< (- px x) w) (< (- py y) h)))
+      (define (entity-within-area ent)
+        (posn-within-area
+         (send ent prop-get 'position-x)
+         (send ent prop-get 'position-y)))
+      (define result (make-hash))
+      (hash-for-each
+       (get-entities)
+       (λ (k v) (if (entity-within-area v) (hash-set! result k v) (void))))
+      result)
+    
+    ;; Public functions
+    (define/public (add-sprite-entity! name se)
+      (hash-set! entity-hash name se))
+    
+    (define/public (rem-sprite-entity! name)
+      (hash-remove! entity-hash name))
+    
+    (define/public (set-entity-properties! name props)
+      (hash-update entity-hash name (λ (se) (send se queue-prop-change! props))))
+    
+    (define/public (set-entity-property! name prop-name prop-val)
+      (set-entity-properties! name (hash prop-name prop-val)))
+    
+    (define/public (set-entity-position! name x y)
+      (set-entity-properties! name (hash 'position-x x 'position-y y)))
+    
+    (define/public (set-entity-rotation! name r)
+      (set-entity-property! name 'rotation r))
+    
+    (define/public (set-entity-scale! name s)
+      (set-entity-property! name 'scale s))
+    
+    (define/public (get-entities)
+      (update-all-entities)
+      (hash-copy entity-hash))
+    
+    (define/public (render width height x y)
+      (define to-draw (get-entities-within-area width height x y))
+      (define sprites (hash-map to-draw (λ (k v) (send v render))))
+      (define dc (new bitmap-dc% [bitmap (make-object bitmap% width height)]))
+      (for-each
+       (match-lambda
+         [(list rr px py) (send dc draw-bitmap rr (- px x) (- py y) 'xor)])
+       sprites)
+      (send dc get-bitmap))
+    
+    ;; Class initialization
+    (super-new)))
 
-(define make-sprite-entity
-  (case-lambda
-    [(bm) (new sprite-entity% [sprite bm])]
-    [(bm r s x y)
-     (define se (make-sprite-entity bm))
-     (mutate-sprite-entity! se r s x y)
-     se]))
-
-(define grass-bm
-  (read-bitmap "../res/grass.png" 'unknown))
-(define bg-bm
-  (read-bitmap "../res/texture.png" 'unknown))
-
-(define my-entities
-  (list (make-sprite-entity grass-bm 35 3 200 200)
-        (make-sprite-entity grass-bm 100 1 100 200)
-        (make-sprite-entity grass-bm 35 2 300 300)
-        (make-sprite-entity grass-bm 45 4 200 400)
-        (make-sprite-entity grass-bm 75 2 400 200)))
-
-(define (render-big entities width height background-bm)
-  (define dc (new bitmap-dc% [bitmap (make-object bitmap% width height)]))
-  (send dc draw-bitmap background-bm 0 0)
-  (define (draw-entity entity)
-    (define-values (bm x y) (send entity render))
-    (send dc draw-bitmap bm x y 'xor))
-  (for-each draw-entity entities)
-  (send dc get-bitmap))
-
-(render-big my-entities 600 600 bg-bm)
+;(define (mutate-sprite-entity! se r s x y)
+;  (send se set-rotation! r)
+;  (send se set-scale! s)
+;  (send se set-position! x y))
+;
+;(define make-sprite-entity
+;  (case-lambda
+;    [(bm) (new sprite-entity% [sprite bm])]
+;    [(bm r s x y)
+;     (define se (make-sprite-entity bm))
+;     (mutate-sprite-entity! se r s x y)
+;     se]))
+;
+;(define grass-bm
+;  (read-bitmap "../res/grass.png" 'unknown))
+;(define bg-bm
+;  (read-bitmap "../res/texture.png" 'unknown))
+;
+;(define my-entities
+;  (list (cons 'a (make-sprite-entity grass-bm 35 3 200 200))
+;        (cons 'b (make-sprite-entity grass-bm 100 1 100 200))
+;        (cons 'c (make-sprite-entity grass-bm 35 2 300 300))
+;        (cons 'd (make-sprite-entity grass-bm 45 4 200 400))
+;        (cons 'e (make-sprite-entity grass-bm 75 2 400 200))))
+;
+;(define (gen-entity-set ents)
+;  (define entity-set (new sprite-entity-set%))
+;  (for-each
+;   (match-lambda
+;     [(cons name se) (send entity-set add-sprite-entity! name se)]
+;     [_ (error "you screwed up somehow")])
+;   ents)
+;  entity-set)
+;
+;(define my-entity-set (gen-entity-set my-entities))
+;
+;(send my-entity-set render 500 500 50 50)

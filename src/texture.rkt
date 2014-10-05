@@ -35,7 +35,8 @@
      texture
      width
      height
-     [event-callback (λ (c) #f)])
+     [event-callback  (λ (c) #f)]
+     [render-callback (λ (dc) (void))])
     
     (field
      [position-x 0]
@@ -58,8 +59,8 @@
     (define/public (max-x) (- texture-width width))
     (define/public (max-y) (- texture-height height))
          
-    ; Set the screen position if it has changed, bracked by position bounds
-    (define/public (set-position x y)
+    ; Set the screen position if it has changed, bracketed by position bounds
+    (define/public (set-position! x y)
       (define adj-x (bound x (min-x) (max-x)))
       (define adj-y (bound y (min-y) (max-y)))
       (unless (and (= position-x adj-x) (= position-y adj-y))
@@ -76,6 +77,7 @@
       (let ([dc (send this get-dc)])
         (send dc suspend-flush)
         (draw-texture position-x position-y dc)
+        (render-callback dc)
         (send dc resume-flush)))
 
     ;; Class initialization
