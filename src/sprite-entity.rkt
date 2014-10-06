@@ -19,6 +19,9 @@
   racket/draw
   "entity.rkt")
 
+(provide
+ (all-defined-out))
+
 (define sprite-entity%
   (class entity%
     ;; Class fields
@@ -107,7 +110,11 @@
       (hash-remove! entity-hash name))
     
     (define/public (set-entity-properties! name props)
-      (hash-update entity-hash name (λ (se) (send se queue-prop-change! props))))
+      (hash-update! entity-hash name
+                    (λ (se)
+                      (send se queue-prop-change! props)
+                      (send se update!)
+                      se)))
     
     (define/public (set-entity-property! name prop-name prop-val)
       (set-entity-properties! name (hash prop-name prop-val)))
@@ -121,6 +128,20 @@
     (define/public (set-entity-scale! name s)
       (set-entity-property! name 'scale s))
     
+    (define/public (get-entity-property name prop-name)
+      (send (hash-ref entity-hash name) prop-get prop-name))
+    
+    (define/public (get-entity-position name)
+      (values
+       (get-entity-property name 'position-x)
+       (get-entity-property name 'position-y)))
+    
+    (define/public (get-entity-rotation name)
+      (get-entity-property name 'rotation))
+    
+    (define/public (get-entity-scale name)
+      (get-entity-property name 'scale))
+    
     (define/public (get-entities)
       (update-all-entities)
       (hash-copy entity-hash))
@@ -128,7 +149,7 @@
     (define/public (render width height x y)
       (define to-draw (get-entities-within-area width height x y))
       (define sprites (hash-map to-draw (λ (k v) (send v render))))
-      (define dc (new bitmap-dc% [bitmap (make-object bitmap% width height)]))
+      (define dc (new bitmap-dc% [bitmap (make-bitmap width height #t)]))
       (for-each
        (match-lambda
          [(list rr px py) (send dc draw-bitmap rr (- px x) (- py y) 'xor)])

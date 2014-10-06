@@ -70,7 +70,7 @@
     ;; Class initialization
     ; Key capture thread
     (define key-thread
-      (thread (lambda ()
+      (thread (λ ()
                 (let loop ()
                   (set-pressed-keys (translate-event (thread-receive)))
                   (loop)))))

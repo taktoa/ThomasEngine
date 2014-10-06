@@ -36,7 +36,7 @@
      width
      height
      [event-callback  (λ (c) #f)]
-     [render-callback (λ (dc) (void))])
+     [render-callback (λ (w h x y) (void))])
     
     (field
      [position-x 0]
@@ -77,7 +77,8 @@
       (let ([dc (send this get-dc)])
         (send dc suspend-flush)
         (draw-texture position-x position-y dc)
-        (render-callback dc)
+        (send dc draw-bitmap
+              (render-callback (get-width) (get-height) position-x position-y) 0 0 'xor)
         (send dc resume-flush)))
 
     ;; Class initialization
