@@ -15,7 +15,6 @@
 ;    along with ThomasEngine. If not, see <http://www.gnu.org/licenses/>.
 
 #lang racket
-
 (require
   data/queue)
 

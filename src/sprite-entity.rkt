@@ -152,47 +152,12 @@
       (define dc (new bitmap-dc% [bitmap (make-bitmap width height #t)]))
       (for-each
        (match-lambda
-         [(list rr px py) (send dc draw-bitmap rr (- px x) (- py y) 'xor)])
+         [(list rr px py) (send dc draw-bitmap rr
+                                (- (- px (* 1/2 (send rr get-width)))  x)
+                                (- (- py (* 1/2 (send rr get-height))) y)
+                                'xor)])
        sprites)
       (send dc get-bitmap))
     
     ;; Class initialization
     (super-new)))
-
-;(define (mutate-sprite-entity! se r s x y)
-;  (send se set-rotation! r)
-;  (send se set-scale! s)
-;  (send se set-position! x y))
-;
-;(define make-sprite-entity
-;  (case-lambda
-;    [(bm) (new sprite-entity% [sprite bm])]
-;    [(bm r s x y)
-;     (define se (make-sprite-entity bm))
-;     (mutate-sprite-entity! se r s x y)
-;     se]))
-;
-;(define grass-bm
-;  (read-bitmap "../res/grass.png" 'unknown))
-;(define bg-bm
-;  (read-bitmap "../res/texture.png" 'unknown))
-;
-;(define my-entities
-;  (list (cons 'a (make-sprite-entity grass-bm 35 3 200 200))
-;        (cons 'b (make-sprite-entity grass-bm 100 1 100 200))
-;        (cons 'c (make-sprite-entity grass-bm 35 2 300 300))
-;        (cons 'd (make-sprite-entity grass-bm 45 4 200 400))
-;        (cons 'e (make-sprite-entity grass-bm 75 2 400 200))))
-;
-;(define (gen-entity-set ents)
-;  (define entity-set (new sprite-entity-set%))
-;  (for-each
-;   (match-lambda
-;     [(cons name se) (send entity-set add-sprite-entity! name se)]
-;     [_ (error "you screwed up somehow")])
-;   ents)
-;  entity-set)
-;
-;(define my-entity-set (gen-entity-set my-entities))
-;
-;(send my-entity-set render 500 500 50 50)

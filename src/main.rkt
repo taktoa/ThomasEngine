@@ -145,8 +145,7 @@
   (define w (send main-ac get-width))
   (define h (send main-ac get-height))
   (let-values ([(x y) (send my-entity-set get-entity-position 'a)])
-    (send main-ac set-position! x y))
-;    (send main-ac set-position! (- x (/ w 2)) (- y (/ h 2))))
+    (send main-ac set-position! (- x (/ w 2)) (- y (/ h 2))))
   (send main-frame refresh))
 
 ; Screen refresh timer
