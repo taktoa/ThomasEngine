@@ -67,48 +67,27 @@
 (define (get-texture path)
   (read-bitmap path 'unknown))
 
-(define (mutate-sprite-entity! se r s x y)
-  (send se set-rotation! r)
-  (send se set-scale! s)
-  (send se set-position! x y))
-
-(define make-sprite-entity
-  (case-lambda
-    [(bm) (new sprite-entity% [sprite bm])]
-    [(bm r s x y)
-     (define se (make-sprite-entity bm))
-     (mutate-sprite-entity! se r s x y)
-     se]))
-
 (define grass-bm (get-texture "../res/grass.png"))
 
-(define my-entities
-  (list (cons 'a (make-sprite-entity grass-bm 35 3 0 0))
-        (cons 'b (make-sprite-entity grass-bm 100 1 100 200))
-        (cons 'c (make-sprite-entity grass-bm 35 2 300 300))))
+(define main-character-entity (new sprite-entity% [sprite grass-bm]))
+(send main-character-entity set-rotation! 35)
+(send main-character-entity set-scale! 3)
+(send main-character-entity set-position! 100 100)
 
-(define (gen-entity-set ents)
-  (define entity-set (new sprite-entity-set%))
-  (for-each
-   (match-lambda
-     [(cons name se) (send entity-set add-sprite-entity! name se)]
-     [_ (error "you screwed up somehow")])
-   ents)
-  entity-set)
-
-(define my-entity-set (gen-entity-set my-entities))
+(define main-entity-set (new sprite-entity-set%))
+(send main-entity-set add-sprite-entity! 'a main-character-entity)
 
 (define (test-renderer w h x y)
-  (send my-entity-set render w h x y))
+  (send main-entity-set render w h x y))
 
 ; Move canvas by (dx, dy)
 (define (dmv dx dy canvas)
-  (let-values ([(cx cy) (send my-entity-set get-entity-position 'a)])
+  (let-values ([(cx cy) (send main-entity-set get-entity-position 'a)])
     (unless 
         (equal?
          (send property-layer property-at-pos (+ dx cx) (+ dy cy))
          'collision)
-      (send my-entity-set set-entity-position! 'a (+ dx cx) (+ dy cy)))))
+      (send main-entity-set set-entity-position! 'a (+ dx cx) (+ dy cy)))))
 
 ;; Instantiate relevant objects
 ; Define a new frame
@@ -144,7 +123,7 @@
 (define (screen-refresh-callback)
   (define w (send main-ac get-width))
   (define h (send main-ac get-height))
-  (let-values ([(x y) (send my-entity-set get-entity-position 'a)])
+  (let-values ([(x y) (send main-entity-set get-entity-position 'a)])
     (send main-ac set-position! (- x (/ w 2)) (- y (/ h 2))))
   (send main-frame refresh))
 

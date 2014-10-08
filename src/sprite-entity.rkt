@@ -104,7 +104,8 @@
     
     ;; Public functions
     (define/public (add-sprite-entity! name se)
-      (hash-set! entity-hash name se))
+      (hash-set! entity-hash name se)
+      (update-all-entities))
     
     (define/public (rem-sprite-entity! name)
       (hash-remove! entity-hash name))
