@@ -148,6 +148,7 @@
       (hash-copy entity-hash))
     
     (define/public (render width height x y)
+      (update-all-entities)
       (define to-draw (get-entities-within-area width height x y))
       (define sprites (hash-map to-draw (λ (k v) (send v render))))
       (define dc (new bitmap-dc% [bitmap (make-bitmap width height #t)]))
