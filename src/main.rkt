@@ -21,6 +21,7 @@
   "utility.rkt"
   "propertylayer.rkt"
   "sprite-entity.rkt"
+  "entity-set.rkt"
   racket/gui
   profile
   errortrace)
