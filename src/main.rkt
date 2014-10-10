@@ -21,7 +21,11 @@
   "utility.rkt"
   "propertylayer.rkt"
   "sprite-entity.rkt"
-  racket/gui)
+  racket/gui
+  profile
+  errortrace)
+
+(profiling-enabled #t)
 
 ;; Program parameters
 ; Canvas width and height
