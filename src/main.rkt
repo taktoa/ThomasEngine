@@ -22,11 +22,7 @@
   "propertylayer.rkt"
   "sprite-entity.rkt"
   "sprite-entity-set.rkt"
-  racket/gui
-  profile
-  errortrace)
-
-(profiling-enabled #t)
+  racket/gui)
 
 ;; Program parameters
 ; Canvas width and height
@@ -38,7 +34,7 @@
 (define (center-pixel-y canvas) (+ (get-field position-y canvas) (/ canvas-height 2)))
 
 ; Velocity in pixels per movement thread update
-(define vel 10)
+(define vel 5)
 
 ; Texture file name
 (define texture-path "../res/texture.png")
@@ -85,14 +81,14 @@
 (define (test-renderer w h x y)
   (send main-entity-set render w h x y))
 
-; Move canvas by (dx, dy)
 (define (dmv dx dy canvas)
+  (define (is-colliding x y)
+    (equal? (send property-layer property-at-pos x y)
+            'collision))
   (let-values ([(cx cy) (send main-entity-set get-entity-position 'a)])
-    (unless 
-        (equal?
-         (send property-layer property-at-pos (+ dx cx) (+ dy cy))
-         'collision)
-      (send main-entity-set set-entity-position 'a (+ dx cx) (+ dy cy)))))
+    (define cdx (if (is-colliding (+ dx cx) cy) 0 dx))
+    (define cdy (if (is-colliding cx (+ dy cy)) 0 dy))
+    (send main-entity-set set-entity-position 'a (+ cx cdx) (+ cy cdy))))
 
 ;; Instantiate relevant objects
 ; Define a new frame

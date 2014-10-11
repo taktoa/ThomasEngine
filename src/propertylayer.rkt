@@ -57,9 +57,9 @@
      hash-table)
     
     ;; Local variables
-    ; Read in collision diskmap at path
+    ; Define bitmap drawing context
     (define bitmap-dc
-      (new bitmap-dc% [bitmap bitmap]))
+      (send bitmap make-dc))
     
     ;; Private functions
     ; Returns the hash table's value for a color key at (x, y)
