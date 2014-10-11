@@ -16,93 +16,76 @@
 
 #lang racket
 (require
-  racket/draw
+  data/queue
   "entity.rkt")
 
 (provide
  (all-defined-out))
 
-(define sprite-entity-set%
+(define entity-set%
   (class object%
     ;; Class fields
     (field
+     [update-queue (make-queue)]
      [entity-hash (make-hash)])
     
     ;; Private functions
-    (define/private (update-all-entities)
-      (hash-for-each entity-hash (λ (k v) (send v update!))))
+    ; Set the properties of one entity
+    (define/private (set-entity-properties! name props)
+      (hash-update! entity-hash name
+                    (λ (e) (make-entity (send e modify-props props)))))
     
-    (define/private (get-entities-within-area w h x y)
-      (define (posn-within-area px py)
-        (and (< (- px x) w) (< (- py y) h)))
-      (define (entity-within-area ent)
-        (posn-within-area
-         (send ent prop-get 'position-x)
-         (send ent prop-get 'position-y)))
-      (define result (make-hash))
-      (hash-for-each
-       (get-entities)
-       (λ (k v) (if (entity-within-area v) (hash-set! result k v) (void))))
-      result)
+    ; Apply one update
+    (define/private (apply-update! c)
+      (match c
+        [(cons n 'add) (hash-set! entity-hash n (make-entity (hash)))]
+        [(cons n 'delete) (hash-remove! entity-hash n)]
+        [(cons n change) (set-entity-properties! n change)]
+        [else (raise-argument-error 'apply-update! "change pair" c)]))
+    
+    ; Clear queue
+    (define/private (clear-queue!)
+      (set! update-queue (make-queue)))
     
     ;; Public functions
-    (define/public (add-sprite-entity! name se)
-      (hash-set! entity-hash name se)
-      (update-all-entities))
+    ; Queue up an entity addition
+    (define/public (add-entity name)
+      (enqueue! update-queue (cons name 'add)))
     
-    (define/public (rem-sprite-entity! name)
-      (hash-remove! entity-hash name))
+    ; Queue up an entity removal
+    (define/public (rem-entity name)
+      (enqueue! update-queue (cons name 'delete)))
     
-    (define/public (set-entity-properties! name props)
-      (hash-update! entity-hash name
-                    (λ (se)
-                      (send se queue-prop-change! props)
-                      (send se update!)
-                      se)))
+    ; Queue up entity changes
+    (define/public (set-entity-properties name props)
+      (enqueue! update-queue (cons name props)))
     
-    (define/public (set-entity-property! name prop-name prop-val)
-      (set-entity-properties! name (hash prop-name prop-val)))
+    ; Queue up a single entity change
+    (define/public (set-entity-property name key value)
+      (set-entity-properties name (hash key value)))
     
-    (define/public (set-entity-position! name x y)
-      (set-entity-properties! name (hash 'position-x x 'position-y y)))
-    
-    (define/public (set-entity-rotation! name r)
-      (set-entity-property! name 'rotation r))
-    
-    (define/public (set-entity-scale! name s)
-      (set-entity-property! name 'scale s))
-    
-    (define/public (get-entity-property name prop-name)
-      (send (hash-ref entity-hash name) prop-get prop-name))
-    
-    (define/public (get-entity-position name)
-      (values
-       (get-entity-property name 'position-x)
-       (get-entity-property name 'position-y)))
-    
-    (define/public (get-entity-rotation name)
-      (get-entity-property name 'rotation))
-    
-    (define/public (get-entity-scale name)
-      (get-entity-property name 'scale))
-    
+    ; Get all entities
     (define/public (get-entities)
-      (update-all-entities)
+      (update!)
       (hash-copy entity-hash))
     
-    (define/public (render width height x y)
-      (update-all-entities)
-      (define to-draw (get-entities-within-area width height x y))
-      (define sprites (hash-map to-draw (λ (k v) (send v render))))
-      (define dc (new bitmap-dc% [bitmap (make-bitmap width height #t)]))
-      (for-each
-       (match-lambda
-         [(list rr px py) (send dc draw-bitmap rr
-                                (- (- px (* 1/2 (send rr get-width)))  x)
-                                (- (- py (* 1/2 (send rr get-height))) y)
-                                'xor)])
-       sprites)
-      (send dc get-bitmap))
+    ; Get one entity
+    (define/public (get-entity name)
+      (hash-ref entity-hash name))
+    
+    ; Get all properties of an entity
+    (define/public (get-entity-properties name)
+      (send (get-entity name) prop-get-all))
+    
+    ; Get a property of an entity
+    (define/public (get-entity-property name prop)
+      (send (get-entity name) prop-get prop))
+    
+    ; Apply all updates in queue and clear it
+    (define/public (update!)
+      (for ([c (in-queue update-queue)])
+        (apply-update! c))
+      (clear-queue!))
     
     ;; Class initialization
     (super-new)))

@@ -21,33 +21,54 @@
 (provide
  (all-defined-out))
 
+(define (make-entity prop)
+  (new entity% [properties prop]))
+
 (define entity%
   (class object%
     ;; Class fields
-    (field
-     [update-queue (make-queue)]
-     [properties (make-hash)])
+    (init-field
+     ;[update-queue (make-queue)]
+     [properties (hash)])
     
     ;; Private functions
     ; Merge changes into the properties
-    (define/private (prop-merge! changes)
-      (hash-for-each
-       changes
-       (λ (k v)
-         (if (eq? v 'delete)
-             (hash-remove! properties k)
-             (hash-set! properties k v)))))
+    ;    (define/private (prop-merge! changes)
+    ;      (hash-for-each
+    ;       changes
+    ;       (λ (k v)
+    ;         (if (eq? v 'delete)
+    ;             (hash-remove! properties k)
+    ;             (hash-set! properties k v)))))
     
     ;; Public functions
     ; Commit changes in the update queue
-    (define/public (update!)
-      (for ([u (queue->list update-queue)])
-        (prop-merge! u))
-      (set! update-queue (make-queue)))
+    ;    (define/public (update!)
+    ;      (for ([u (queue->list update-queue)])
+    ;        (prop-merge! u))
+    ;      (set! update-queue (make-queue)))
     
-    ; Queue up a property change
-    (define/public (queue-prop-change! c)
-      (enqueue! update-queue c))
+    ; Change a property
+    (define/public prop-update
+      (case-lambda
+        [(k v) (prop-update properties k v)]
+        [(p k v) (if (equal? v 'delete)
+                     (hash-remove p k)
+                     (hash-set p k v))]))
+    
+    ; Change multiple properties at once
+    (define/public (modify-props changes)
+      (define cl (hash->list changes))
+      (define (loop c ph)
+        (cond
+          [(eq? c '()) ph]
+          [else (define nph
+                  (apply
+                   (λ (p k v) (prop-update p k v))
+                   ph
+                   (first c)))
+                (loop (rest c) nph)]))
+      (loop cl properties))
     
     ; Get a specific property of the entity
     (define/public (prop-get k) (hash-ref properties k))    
