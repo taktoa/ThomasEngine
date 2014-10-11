@@ -21,7 +21,7 @@
   "utility.rkt"
   "propertylayer.rkt"
   "sprite-entity.rkt"
-  "entity-set.rkt"
+  "sprite-entity-set.rkt"
   racket/gui
   profile
   errortrace)
@@ -38,7 +38,7 @@
 (define (center-pixel-y canvas) (+ (get-field position-y canvas) (/ canvas-height 2)))
 
 ; Velocity in pixels per movement thread update
-(define vel 5)
+(define vel 10)
 
 ; Texture file name
 (define texture-path "../res/texture.png")
@@ -74,13 +74,13 @@
 
 (define grass-bm (get-texture "../res/grass.png"))
 
-(define main-character-entity (new sprite-entity% [sprite grass-bm]))
-(send main-character-entity set-rotation! 35)
-(send main-character-entity set-scale! 3)
-(send main-character-entity set-position! 100 100)
+(define main-character-entity
+  (make-sprite-entity grass-bm 100 100 35 3))
 
 (define main-entity-set (new sprite-entity-set%))
-(send main-entity-set add-sprite-entity! 'a main-character-entity)
+(send main-entity-set add-entity 'a)
+(send main-entity-set set-entity 'a main-character-entity)
+(send main-entity-set update!)
 
 (define (test-renderer w h x y)
   (send main-entity-set render w h x y))
@@ -92,7 +92,7 @@
         (equal?
          (send property-layer property-at-pos (+ dx cx) (+ dy cy))
          'collision)
-      (send main-entity-set set-entity-position! 'a (+ dx cx) (+ dy cy)))))
+      (send main-entity-set set-entity-position 'a (+ dx cx) (+ dy cy)))))
 
 ;; Instantiate relevant objects
 ; Define a new frame

@@ -15,8 +15,7 @@
 ;    along with ThomasEngine. If not, see <http://www.gnu.org/licenses/>.
 
 #lang racket
-(require
-  data/queue)
+(require)
 
 (provide
  (all-defined-out))
@@ -28,26 +27,9 @@
   (class object%
     ;; Class fields
     (init-field
-     ;[update-queue (make-queue)]
      [properties (hash)])
     
-    ;; Private functions
-    ; Merge changes into the properties
-    ;    (define/private (prop-merge! changes)
-    ;      (hash-for-each
-    ;       changes
-    ;       (λ (k v)
-    ;         (if (eq? v 'delete)
-    ;             (hash-remove! properties k)
-    ;             (hash-set! properties k v)))))
-    
     ;; Public functions
-    ; Commit changes in the update queue
-    ;    (define/public (update!)
-    ;      (for ([u (queue->list update-queue)])
-    ;        (prop-merge! u))
-    ;      (set! update-queue (make-queue)))
-    
     ; Change a property
     (define/public prop-update
       (case-lambda
@@ -59,19 +41,19 @@
     ; Change multiple properties at once
     (define/public (modify-props changes)
       (define cl (hash->list changes))
-      (define (loop c ph)
-        (cond
-          [(eq? c '()) ph]
-          [else (define nph
-                  (apply
-                   (λ (p k v) (prop-update p k v))
-                   ph
-                   (first c)))
-                (loop (rest c) nph)]))
-      (loop cl properties))
+      
+      ; I almost can't believe this works.
+      (define new-props
+        ((apply compose
+                (map (λ (c)
+                       (λ (p) (prop-update p (car c) (cdr c))))
+                     cl))
+         properties))
+      
+      (new this% [properties new-props]))
     
     ; Get a specific property of the entity
-    (define/public (prop-get k) (hash-ref properties k))    
+    (define/public (prop-get k) (hash-ref properties k))
     
     ; Get all properties of this entity
     (define/public (prop-get-all) (hash-copy properties))

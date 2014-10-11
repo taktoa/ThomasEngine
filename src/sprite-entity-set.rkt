@@ -17,7 +17,8 @@
 #lang racket
 (require
   racket/draw
-  "entity-set.rkt")
+  "entity-set.rkt"
+  "sprite-entity.rkt")
 
 (provide
  (all-defined-out))

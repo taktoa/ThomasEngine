@@ -22,31 +22,37 @@
 (provide
  (all-defined-out))
 
+(define (make-sprite-entity sprite x y r s)
+  (define props
+    (hash 'sprite sprite
+          'position-x x
+          'position-y y
+          'rotation r
+          'scale s))
+  (new sprite-entity%
+       [properties props]))
+
 (define sprite-entity%
   (class entity%
     ;; Class fields
     (inherit
-      update!
-      queue-prop-change!
+      prop-update
+      modify-props
       prop-get
       prop-get-all)
     
-    (init-field
-     [sprite #f])
-    
-    (field
-     [sprite-dc #f])
-    
     ;; Private functions
-    (define/private (dtr r) (* r (/ (* 2 pi) 360)))
+    ; Convert degrees to radians
+    (define/private (dtr d) (* d pi 1/180))
     
     (define/private (render-sprite)
-      (let ([s (prop-get 'scale)]
-            [r (prop-get 'rotation)]
-            [sw (send sprite get-width)]
-            [sh (send sprite get-height)])
+      (let* ([sprite (prop-get 'sprite)]
+             [s (prop-get 'scale)]
+             [r (prop-get 'rotation)]
+             [sw (send sprite get-width)]
+             [sh (send sprite get-height)])
         (define (gen-blank-bm) (make-bitmap (* 2 s sw) (* 2 s sh) #t))
-        (set! sprite-dc (new bitmap-dc% [bitmap (gen-blank-bm)]))
+        (define sprite-dc (new bitmap-dc% [bitmap (gen-blank-bm)]))
         (send sprite-dc set-origin (* s sw) (* s sh))
         (send sprite-dc set-rotation (dtr r))
         (send sprite-dc set-scale s s)
@@ -59,22 +65,6 @@
       (list (render-sprite)
             (prop-get 'position-x)
             (prop-get 'position-y)))
-    
-    (define/public (set-properties! props)
-      (queue-prop-change! props))
-    
-    (define/public (set-property! prop-name prop-val)
-      (set-properties! (hash prop-name prop-val)))
-    
-    (define/public (set-position! x y)
-      (set-properties!
-       (hash 'position-x x 'position-y y)))
-    
-    (define/public (set-rotation! r)
-      (set-property! 'rotation r))
-    
-    (define/public (set-scale! s)
-      (set-property! 'scale s))
     
     ;; Class initialization
     (super-new)))

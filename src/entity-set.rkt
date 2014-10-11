@@ -33,15 +33,16 @@
     ; Set the properties of one entity
     (define/private (set-entity-properties! name props)
       (hash-update! entity-hash name
-                    (λ (e) (make-entity (send e modify-props props)))))
+                    (λ (e) (send e modify-props props))))
     
     ; Apply one update
     (define/private (apply-update! c)
       (match c
-        [(cons n 'add) (hash-set! entity-hash n (make-entity (hash)))]
+        [(cons n 'add) (hash-set! entity-hash n #f)]
         [(cons n 'delete) (hash-remove! entity-hash n)]
-        [(cons n change) (set-entity-properties! n change)]
-        [else (raise-argument-error 'apply-update! "change pair" c)]))
+        [(cons n (? hash? p)) (set-entity-properties! n p)]
+        [(cons n ent) (hash-set! entity-hash n ent)]
+        [else (raise-argument-error 'apply-update! "entity" c)]))
     
     ; Clear queue
     (define/private (clear-queue!)
@@ -55,6 +56,10 @@
     ; Queue up an entity removal
     (define/public (rem-entity name)
       (enqueue! update-queue (cons name 'delete)))
+    
+    ; Queue up entity changes (directly setting entity)
+    (define/public (set-entity name ent)
+      (enqueue! update-queue (cons name ent)))
     
     ; Queue up entity changes
     (define/public (set-entity-properties name props)
